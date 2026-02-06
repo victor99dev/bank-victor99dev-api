@@ -6,7 +6,6 @@ public interface IAccountCacheRepository
 {
     Task<AccountResponse?> GetByIdAsync(Guid accountId, CancellationToken cancellationToken = default);
     Task<AccountResponse?> GetByCpfAsync(string cpf, CancellationToken cancellationToken = default);
-    Task SetByIdAsync(AccountResponse account, TimeSpan ttl, CancellationToken cancellationToken = default);
-    Task SetByCpfAsync(string cpf, AccountResponse account, TimeSpan ttl, CancellationToken cancellationToken = default);
+    Task SetAsync(AccountResponse account, TimeSpan cacheTtl, CancellationToken cancellationToken = default);
     Task InvalidateAsync(Guid accountId, string cpf, CancellationToken cancellationToken = default);
 }

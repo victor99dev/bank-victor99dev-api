@@ -30,24 +30,20 @@ public class AccountCacheRepository : IAccountCacheRepository
         return string.IsNullOrWhiteSpace(json) ? null : JsonSerializer.Deserialize<AccountResponse>(json, JsonOptions);
     }
 
-    public Task SetByIdAsync(AccountResponse account, TimeSpan ttl, CancellationToken cancellationToken = default)
-        => _cache.SetStringAsync(
-            Keys.ById(account.Id),
-            JsonSerializer.Serialize(account, JsonOptions),
-            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl },
-            cancellationToken);
-
-    public Task SetByCpfAsync(string cpf, AccountResponse account, TimeSpan ttl, CancellationToken cancellationToken = default)
-        => _cache.SetStringAsync(
-            Keys.ByCpf(cpf.Trim()),
-            JsonSerializer.Serialize(account, JsonOptions),
-            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = ttl },
-            cancellationToken);
 
     public async Task InvalidateAsync(Guid accountId, string cpf, CancellationToken cancellationToken = default)
     {
         await _cache.RemoveAsync(Keys.ById(accountId), cancellationToken);
         await _cache.RemoveAsync(Keys.ByCpf(cpf.Trim()), cancellationToken);
+    }
+
+    public async Task SetAsync(AccountResponse account, TimeSpan cacheTtl, CancellationToken cancellationToken = default)
+    {
+        var opts = new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = cacheTtl };
+        var json = JsonSerializer.Serialize(account, JsonOptions);
+
+        await _cache.SetStringAsync(Keys.ById(account.Id), json, opts, cancellationToken);
+        await _cache.SetStringAsync(Keys.ByCpf(account.Cpf.Trim()), json, opts, cancellationToken);
     }
 
     private static class Keys
