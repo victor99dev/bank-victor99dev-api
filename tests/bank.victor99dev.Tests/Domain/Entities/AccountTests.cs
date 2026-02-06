@@ -1,6 +1,5 @@
 using bank.victor99dev.Domain.Entities;
 using bank.victor99dev.Domain.Exceptions;
-using bank.victor99dev.Domain.ValueObjects;
 
 namespace bank.victor99dev.Tests.Domain.Entities;
 
@@ -9,10 +8,7 @@ public class AccountTests
     [Fact(DisplayName = "Should create account when name and CPF are valid")]
     public void ShouldCreateAccountWhenNameAndCpfAreValid()
     {
-        var name = CreateName("Victor Hugo");
-        var cpf = CreateCpf("123.456.789-09");
-
-        var account = Account.Create(name, cpf);
+        var account = Account.Create("Victor Hugo", "123.456.789-09");
 
         Assert.NotEqual(default, account.Id);
         Assert.Equal("Victor Hugo", account.AccountName.Value);
@@ -25,17 +21,92 @@ public class AccountTests
         Assert.Null(account.UpdatedAt);
     }
 
-    [Fact(DisplayName = "Should update account name and set UpdatedAt when Update is called")]
-    public void ShouldUpdateAccountNameAndSetUpdatedAtWhenUpdateIsCalled()
+    [Fact(DisplayName = "Should update account details and set UpdatedAt when Update (PUT) is called")]
+    public void ShouldUpdateAccountDetailsAndSetUpdatedAtWhenUpdatePutIsCalled()
     {
         var account = CreateAccount();
         Assert.Null(account.UpdatedAt);
 
-        account.Update(CreateName("New Name"));
+        account.Update(
+            accountName: "Updated Name",
+            cpf: "987.654.321-00",
+            isActive: false,
+            isDeleted: false
+        );
+
+        Assert.Equal("Updated Name", account.AccountName.Value);
+        Assert.Equal("98765432100", account.Cpf.Value);
+        Assert.False(account.IsActive);
+        Assert.False(account.IsDeleted);
+
+        Assert.NotNull(account.UpdatedAt);
+        Assert.True(account.UpdatedAt >= account.CreatedAt);
+    }
+
+    [Fact(DisplayName = "Should throw exception when calling Update (PUT) on a deleted account")]
+    public void ShouldThrowExceptionWhenUpdatingPutOnADeletedAccount()
+    {
+        var account = CreateAccount();
+        account.MarkAsDeleted();
+
+        var ex = Assert.Throws<DomainException>(() =>
+            account.Update(
+                accountName: "Updated Name",
+                cpf: "987.654.321-00",
+                isActive: true,
+                isDeleted: false
+            )
+        );
+
+        Assert.Equal("Cannot update account details because the account is deleted. Restore it first.", ex.Message);
+    }
+
+    [Fact(DisplayName = "Should change account name and set UpdatedAt when ChangeName is called")]
+    public void ShouldChangeAccountNameAndSetUpdatedAtWhenChangeNameIsCalled()
+    {
+        var account = CreateAccount();
+        Assert.Null(account.UpdatedAt);
+
+        account.ChangeName("New Name");
 
         Assert.Equal("New Name", account.AccountName.Value);
         Assert.NotNull(account.UpdatedAt);
         Assert.True(account.UpdatedAt >= account.CreatedAt);
+    }
+
+    [Fact(DisplayName = "Should throw exception when changing name of a deleted account")]
+    public void ShouldThrowExceptionWhenChangingNameOfADeletedAccount()
+    {
+        var account = CreateAccount();
+        account.MarkAsDeleted();
+
+        var ex = Assert.Throws<DomainException>(() => account.ChangeName("Any Name"));
+
+        Assert.Equal("Cannot change the account name because the account is deleted. Restore it first.", ex.Message);
+    }
+
+    [Fact(DisplayName = "Should change account CPF and set UpdatedAt when ChangeCpf is called")]
+    public void ShouldChangeAccountCpfAndSetUpdatedAtWhenChangeCpfIsCalled()
+    {
+        var account = CreateAccount();
+        Assert.Null(account.UpdatedAt);
+
+        account.ChangeCpf("987.654.321-00");
+
+        Assert.Equal("98765432100", account.Cpf.Value);
+        Assert.NotNull(account.UpdatedAt);
+        Assert.True(account.UpdatedAt >= account.CreatedAt);
+    }
+
+    [Fact(DisplayName = "Should throw exception when changing CPF of a deleted account")]
+    public void ShouldThrowExceptionWhenChangingCpfOfADeletedAccount()
+    {
+        var account = CreateAccount();
+        account.MarkAsDeleted();
+
+        var ex = Assert.Throws<DomainException>(() => account.ChangeCpf("987.654.321-00"));
+
+        Assert.Equal("Cannot change the account CPF because the account is deleted. Restore it first.", ex.Message);
     }
 
     [Fact(DisplayName = "Should deactivate account and set UpdatedAt when Deactivate is called")]
@@ -59,7 +130,7 @@ public class AccountTests
 
         var exception = Assert.Throws<DomainException>(() => account.Deactivate());
 
-        Assert.Equal("Account is already deactivated.", exception.Message);
+        Assert.Equal("Account is already inactive.", exception.Message);
     }
 
     [Fact(DisplayName = "Should activate a deactivated account and set UpdatedAt when Activate is called")]
@@ -113,7 +184,7 @@ public class AccountTests
 
         var exception = Assert.Throws<DomainException>(() => account.MarkAsDeleted());
 
-        Assert.Equal("The account is already marked as deleted.", exception.Message);
+        Assert.Equal("Account is already deleted.", exception.Message);
     }
 
     [Fact(DisplayName = "Should throw exception when activating a deleted account")]
@@ -124,7 +195,7 @@ public class AccountTests
 
         var exception = Assert.Throws<DomainException>(() => account.Activate());
 
-        Assert.Equal("Cannot activate a deleted account. Restore it before activating.", exception.Message);
+        Assert.Equal("Cannot activate a deleted account. Restore it first.", exception.Message);
     }
 
     [Fact(DisplayName = "Should restore a deleted account, activate it, and set UpdatedAt when Restore is called")]
@@ -153,17 +224,9 @@ public class AccountTests
 
         var exception = Assert.Throws<DomainException>(() => account.Restore());
 
-        Assert.Equal("Cannot restore a account that is not deleted.", exception.Message);
+        Assert.Equal("Cannot restore an account that is not deleted.", exception.Message);
     }
 
-    private static Account CreateAccount()
-    {
-        return Account.Create(
-            accountName: CreateName("Victor Hugo"),
-            cpf: CreateCpf("123.456.789-09"));
-    }
-
-    private static NameValueObject CreateName(string value) => new(value);
-
-    private static CpfValueObject CreateCpf(string value) => new(value);
+    private static Account CreateAccount() =>
+        Account.Create("Victor Hugo", "123.456.789-09");
 }
