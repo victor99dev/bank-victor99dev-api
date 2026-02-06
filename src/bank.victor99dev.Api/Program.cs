@@ -2,6 +2,8 @@ using System.Text.Json.Serialization;
 using bank.victor99dev.Application.Interfaces.CacheRepository;
 using bank.victor99dev.Application.Interfaces.Repository;
 using bank.victor99dev.Application.UseCases.Accounts.ActivateAccount;
+using bank.victor99dev.Application.UseCases.Accounts.ChangeAccountCpf;
+using bank.victor99dev.Application.UseCases.Accounts.ChangeAccountName;
 using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.DeactivateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.DeleteAccount;
@@ -42,6 +44,9 @@ builder.Services.AddScoped<IDeleteAccountUseCase, DeleteAccountUseCase>();
 builder.Services.AddScoped<IRestoreAccountUseCase, RestoreAccountUseCase>();
 builder.Services.AddScoped<IGetAccountByCpfUseCase, GetAccountByCpfUseCase>();
 builder.Services.AddScoped<IUpdateAccountUseCase, UpdateAccountUseCase>();
+builder.Services.AddScoped<IChangeAccountNameUseCase, ChangeAccountNameUseCase>();
+builder.Services.AddScoped<IChangeAccountCpfUseCase, ChangeAccountCpfUseCase>();
+
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

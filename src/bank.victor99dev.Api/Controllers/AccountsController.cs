@@ -1,5 +1,7 @@
 using bank.victor99dev.Application.Shared.Pagination;
 using bank.victor99dev.Application.UseCases.Accounts.ActivateAccount;
+using bank.victor99dev.Application.UseCases.Accounts.ChangeAccountCpf;
+using bank.victor99dev.Application.UseCases.Accounts.ChangeAccountName;
 using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.DeactivateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.DeleteAccount;
@@ -27,6 +29,9 @@ public class AccountsController : BaseApiController
     private readonly IActivateAccountUseCase _activateAccountUseCase;
     private readonly IGetAccountByCpfUseCase _getAccountByCpfUseCase;
     private readonly IUpdateAccountUseCase _updateAccountUseCase;
+    private readonly IChangeAccountNameUseCase _changeAccountNameUseCase;
+    private readonly IChangeAccountCpfUseCase _changeAccountCpfUseCase;
+
     public AccountsController(
         ILogger<AccountsController> logger,
         ICreateAccountUseCase createAccountUseCase,
@@ -37,7 +42,9 @@ public class AccountsController : BaseApiController
         IDeactivateAccountUseCase deactivateAccountUseCase,
         IActivateAccountUseCase activateAccountUseCase,
         IGetAccountByCpfUseCase getAccountByCpfUseCase,
-        IUpdateAccountUseCase updateAccountUseCase)
+        IUpdateAccountUseCase updateAccountUseCase,
+        IChangeAccountNameUseCase changeAccountNameUseCase,
+        IChangeAccountCpfUseCase changeAccountCpfUseCase)
     {
         _logger = logger;
         _createAccountUseCase = createAccountUseCase;
@@ -49,6 +56,8 @@ public class AccountsController : BaseApiController
         _activateAccountUseCase = activateAccountUseCase;
         _getAccountByCpfUseCase = getAccountByCpfUseCase;
         _updateAccountUseCase = updateAccountUseCase;
+        _changeAccountNameUseCase = changeAccountNameUseCase;
+        _changeAccountCpfUseCase = changeAccountCpfUseCase;
     }
 
     [HttpPost]
@@ -255,6 +264,61 @@ public class AccountsController : BaseApiController
         catch (Exception ex)
         {
             LogUnexpected(_logger, ex, nameof(UpdateAccount));
+            return UnexpectedProblem();
+        }
+    }
+
+    [HttpPatch("{accountId}/name")]
+    public async Task<IActionResult> ChangeName([FromRoute] Guid accountId, [FromBody] ChangeAccountNameRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var requestBody = new ChangeAccountNameRequest
+            {
+                Name = request.Name
+            };
+
+            var result = await _changeAccountNameUseCase.ExecuteAsync(accountId, requestBody, cancellationToken);
+
+            LogResult(_logger, result, nameof(ChangeName));
+            return FromResult(result);
+        }
+        catch (DomainException ex)
+        {
+            LogDomain(_logger, ex, nameof(ChangeName));
+            return DomainProblem(ex);
+        }
+        catch (Exception ex)
+        {
+            LogUnexpected(_logger, ex, nameof(ChangeName));
+            return UnexpectedProblem();
+        }
+    }
+
+    [HttpPatch("{accountId}/cpf")]
+    public async Task<IActionResult> ChangeCpf([FromRoute] Guid accountId, [FromBody] ChangeAccountCpfRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var requestBody = new ChangeAccountCpfRequest
+            {
+                Cpf = request.Cpf
+            };
+
+            var result = await _changeAccountCpfUseCase.ExecuteAsync(accountId, requestBody, cancellationToken);
+
+            LogResult(_logger, result, nameof(ChangeCpf));
+            return FromResult(result);
+        }
+        catch (DomainException ex)
+        {
+            LogDomain(_logger, ex, nameof(ChangeCpf));
+            return DomainProblem(ex);
+        }
+        catch (Exception ex)
+        {
+            LogUnexpected(_logger, ex, nameof(ChangeCpf));
             return UnexpectedProblem();
         }
     }
