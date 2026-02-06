@@ -50,7 +50,6 @@ public class DeactivateAccountUseCaseTests
         Assert.False(cache.ContainsCpf(request.Cpf));
     }
 
-
     [Fact(DisplayName = "Should throw DomainException when deactivating already inactive account and not enqueue event nor invalidate cache")]
     public async Task ShouldThrow_WhenAlreadyInactive_NoEvent_NoInvalidate()
     {
