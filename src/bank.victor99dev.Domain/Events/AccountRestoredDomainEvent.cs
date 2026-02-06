@@ -2,7 +2,7 @@ using bank.victor99dev.Domain.Interfaces.Events;
 
 namespace bank.victor99dev.Domain.Events;
 
-public sealed record AccountCreatedDomainEvent(Guid EventId, DateTimeOffset OccurredOnUtc, Guid AccountId, string Cpf) : IDomainEvent, IHasAggregateKey
+public sealed record AccountRestoredDomainEvent(Guid EventId, DateTimeOffset OccurredOnUtc, Guid AccountId) : IDomainEvent, IHasAggregateKey
 {
     public string AggregateId => AccountId.ToString("N");
     public string? Key => AggregateId;
