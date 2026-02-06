@@ -12,6 +12,11 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d bank"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
 
   redis:
     image: redis:7-alpine
@@ -25,7 +30,7 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
-      retries: 5
+      retries: 30
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -48,8 +53,8 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
 
-      KAFKA_LISTENERS: PLAINTEXT_HOST://0.0.0.0:9092,PLAINTEXT://0.0.0.0:29092
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_HOST://localhost:9092,PLAINTEXT://kafka:29092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
 
@@ -65,6 +70,50 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: bank-local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+
+  migrator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: migrator
+    image: bank-migrator:latest
+    container_name: bank-migrator
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=bank;Username=postgres;Password=d0ck3r@P@ssw0rd!
+    restart: "no"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    image: bank-api:latest
+    container_name: bank-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      migrator:
+        condition: service_completed_successfully
+    ports:
+      - "5000:5000"
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      ASPNETCORE_ENVIRONMENT: Development
+
+      ConnectionStrings__DefaultConnection: Host=postgres;Port=5432;Database=bank;Username=postgres;Password=d0ck3r@P@ssw0rd!
+      ConnectionStrings__RedisConnection: redis:6379
+
+      Kafka__BootstrapServers: kafka:29092
+      Kafka__ClientId: bank-api
+      Kafka__TopicOutbox: bank.victor99dev.events
 
 volumes:
   postgres_data:
