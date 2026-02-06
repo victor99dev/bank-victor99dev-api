@@ -1,5 +1,7 @@
 using bank.victor99dev.Application.Shared.Pagination;
+using bank.victor99dev.Application.UseCases.Accounts.ActivateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
+using bank.victor99dev.Application.UseCases.Accounts.DeactivateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.DeleteAccount;
 using bank.victor99dev.Application.UseCases.Accounts.GetAccountById;
 using bank.victor99dev.Application.UseCases.Accounts.GetAccountsPaged;
@@ -19,13 +21,17 @@ public class AccountsController : BaseApiController
     private readonly IGetAccountsPagedUseCase _getAccountsPagedUseCase;
     private readonly IDeleteAccountUseCase _deleteAccountUseCase;
     private readonly IRestoreAccountUseCase _restoreAccountUseCase;
+    private readonly IDeactivateAccountUseCase _deactivateAccountUseCase;
+    private readonly IActivateAccountUseCase _activateAccountUseCase;
     public AccountsController(
         ILogger<AccountsController> logger,
         ICreateAccountUseCase createAccountUseCase,
         IGetAccountByIdUseCase getAccountByIdUseCase,
         IGetAccountsPagedUseCase getAccountsPagedUseCase,
         IDeleteAccountUseCase deleteAccountUseCase,
-        IRestoreAccountUseCase restoreAccountUseCase)
+        IRestoreAccountUseCase restoreAccountUseCase,
+        IDeactivateAccountUseCase deactivateAccountUseCase,
+        IActivateAccountUseCase activateAccountUseCase)
     {
         _logger = logger;
         _createAccountUseCase = createAccountUseCase;
@@ -33,6 +39,8 @@ public class AccountsController : BaseApiController
         _getAccountsPagedUseCase = getAccountsPagedUseCase;
         _deleteAccountUseCase = deleteAccountUseCase;
         _restoreAccountUseCase = restoreAccountUseCase;
+        _deactivateAccountUseCase = deactivateAccountUseCase;
+        _activateAccountUseCase = activateAccountUseCase;
     }
 
     [HttpPost]
@@ -143,6 +151,50 @@ public class AccountsController : BaseApiController
         catch (Exception ex)
         {
             LogUnexpected(_logger, ex, nameof(RestoreAccount));
+            return UnexpectedProblem();
+        }
+    }
+
+    [HttpPatch("{accountId}/deactivate")]
+    public async Task<IActionResult> DeactivateAccount([FromRoute] Guid accountId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _deactivateAccountUseCase.ExecuteAsync(accountId, cancellationToken);
+
+            LogResult(_logger, result, nameof(DeactivateAccount));
+            return FromResult(result);
+        }
+        catch (DomainException ex)
+        {
+            LogDomain(_logger, ex, nameof(DeactivateAccount));
+            return DomainProblem(ex);
+        }
+        catch (Exception ex)
+        {
+            LogUnexpected(_logger, ex, nameof(DeactivateAccount));
+            return UnexpectedProblem();
+        }
+    }
+
+    [HttpPatch("{accountId}/activate")]
+    public async Task<IActionResult> ActivateAccount([FromRoute] Guid accountId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _activateAccountUseCase.ExecuteAsync(accountId, cancellationToken);
+
+            LogResult(_logger, result, nameof(ActivateAccount));
+            return FromResult(result);
+        }
+        catch (DomainException ex)
+        {
+            LogDomain(_logger, ex, nameof(ActivateAccount));
+            return DomainProblem(ex);
+        }
+        catch (Exception ex)
+        {
+            LogUnexpected(_logger, ex, nameof(ActivateAccount));
             return UnexpectedProblem();
         }
     }
