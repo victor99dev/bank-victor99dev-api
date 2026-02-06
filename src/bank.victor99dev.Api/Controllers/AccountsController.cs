@@ -1,5 +1,7 @@
+using bank.victor99dev.Application.Shared.Pagination;
 using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.GetAccountById;
+using bank.victor99dev.Application.UseCases.Accounts.GetAccountsPaged;
 using bank.victor99dev.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,14 +14,17 @@ public class AccountsController : BaseApiController
     private readonly ILogger<AccountsController> _logger;
     private readonly ICreateAccountUseCase _createAccountUseCase;
     private readonly IGetAccountByIdUseCase _getAccountByIdUseCase;
+    private readonly IGetAccountsPagedUseCase _getAccountsPagedUseCase;
     public AccountsController(
         ILogger<AccountsController> logger,
         ICreateAccountUseCase createAccountUseCase,
-        IGetAccountByIdUseCase getAccountByIdUseCase)
+        IGetAccountByIdUseCase getAccountByIdUseCase,
+        IGetAccountsPagedUseCase getAccountsPagedUseCase)
     {
         _logger = logger;
         _createAccountUseCase = createAccountUseCase;
         _getAccountByIdUseCase = getAccountByIdUseCase;
+        _getAccountsPagedUseCase = getAccountsPagedUseCase;
     }
 
     [HttpPost]
@@ -64,6 +69,28 @@ public class AccountsController : BaseApiController
         catch (Exception ex)
         {
             LogUnexpected(_logger, ex, nameof(GetAccountById));
+            return UnexpectedProblem();
+        }
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAccountPaged([FromQuery] PageRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _getAccountsPagedUseCase.ExecuteAsync(request, cancellationToken);
+
+            LogResult(_logger, result, nameof(GetAccountPaged));
+            return FromResult(result);
+        }
+        catch (DomainException ex)
+        {
+            LogDomain(_logger, ex, nameof(GetAccountPaged));
+            return DomainProblem(ex);
+        }
+        catch (Exception ex)
+        {
+            LogUnexpected(_logger, ex, nameof(GetAccountPaged));
             return UnexpectedProblem();
         }
     }
