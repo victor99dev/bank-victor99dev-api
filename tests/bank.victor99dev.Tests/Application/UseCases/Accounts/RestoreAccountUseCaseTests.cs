@@ -1,7 +1,7 @@
+using bank.victor99dev.Application.Shared.Messaging;
 using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.DeleteAccount;
 using bank.victor99dev.Application.UseCases.Accounts.RestoreAccount;
-using bank.victor99dev.Application.UseCases.Accounts.Shared;
 using bank.victor99dev.Domain.Entities;
 using bank.victor99dev.Tests.Application.Shared;
 using bank.victor99dev.Tests.Infrastructure.Shared;
@@ -17,13 +17,15 @@ public class RestoreAccountUseCaseTests
         var db = EntityFrameworkInMemoryFactory.NewDbName();
         var (ctx, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
 
+        var cache = new FakeAccountCacheRepository();
+        var dispatcher = new FakeDomainEventDispatcher();
+        var factory = new AccountEventFactory();
+
         var request = AccountRequests.Valid(seed: 1);
-        var created = await new CreateAccountUseCase(repo, uow).ExecuteAsync(request);
+        var created = await new CreateAccountUseCase(repo, uow, cache, factory, dispatcher).ExecuteAsync(request);
         var id = created.Data!.Id;
 
-        var cache = new FakeAccountCacheRepository();
-
-        cache.Seed(new AccountResponse
+        cache.Seed(new()
         {
             Id = id,
             Name = created.Data!.Name,
@@ -34,13 +36,16 @@ public class RestoreAccountUseCaseTests
             UpdatedAt = DateTime.UtcNow
         });
 
-        var deleted = await new DeleteAccountUseCase(repo, uow).ExecuteAsync(id);
+        var deleted = await new DeleteAccountUseCase(repo, uow, cache, dispatcher, factory).ExecuteAsync(id);
         Assert.True(deleted.IsSuccess);
 
         var rawDeleted = await ctx.Set<Account>().FirstAsync(x => x.Id == id);
         Assert.True(rawDeleted.IsDeleted);
 
-        var restore = new RestoreAccountUseCase(repo, uow, cache);
+        var eventsBefore = dispatcher.Enqueued.Count;
+        var invalidatesBefore = cache.InvalidateCalls;
+
+        var restore = new RestoreAccountUseCase(repo, uow, cache, dispatcher, factory);
         var restored = await restore.ExecuteAsync(id);
 
         Assert.True(restored.IsSuccess);
@@ -50,9 +55,12 @@ public class RestoreAccountUseCaseTests
         Assert.True(rawRestored.IsActive);
         Assert.NotNull(rawRestored.UpdatedAt);
 
-        Assert.Equal(1, cache.InvalidateCalls);
+        Assert.Equal(invalidatesBefore + 1, cache.InvalidateCalls);
         Assert.False(cache.ContainsId(id));
         Assert.False(cache.ContainsCpf(request.Cpf));
+
+        Assert.Equal(eventsBefore + 1, dispatcher.Enqueued.Count);
+        Assert.Contains(dispatcher.Enqueued, e => e.GetType().Name == "AccountRestoredDomainEvent");
 
         var filtered = await repo.GetByIdAsync(id);
         Assert.NotNull(filtered);

@@ -49,10 +49,10 @@ public class NameValueObjectTests
     [Fact(DisplayName = "Should throw exception when name has more than 20 characters")]
     public void ShouldThrowExceptionWhenNameHasMoreThan20Characters()
     {
-        var name = new string('a', 21);
+        var name = new string('a', 101);
 
         var exception = Assert.Throws<DomainException>(() => new NameValueObject(name));
 
-        Assert.Equal("Name must contain at most 20 characters.", exception.Message);
+        Assert.Equal("Name must contain at most 100 characters.", exception.Message);
     }
 }

@@ -1,4 +1,7 @@
+using bank.victor99dev.Application.Interfaces.CacheRepository;
+using bank.victor99dev.Application.Interfaces.Messaging;
 using bank.victor99dev.Application.Interfaces.Repository;
+using bank.victor99dev.Application.Shared.Cache;
 using bank.victor99dev.Application.Shared.Results;
 
 namespace bank.victor99dev.Application.UseCases.Accounts.DeleteAccount;
@@ -7,10 +10,21 @@ public class DeleteAccountUseCase : IDeleteAccountUseCase
 {
     private readonly IAccountRepository _accountRepository;
     private readonly IUnitOfWork _unitOfWork;
-    public DeleteAccountUseCase(IAccountRepository accountRepository, IUnitOfWork unitOfWork)
+    private readonly IDomainEventDispatcher _domainEventDispatcher;
+    private readonly IAccountEventFactory _accountEventFactory;
+    private readonly IAccountCacheRepository _accountCacheRepository;
+    public DeleteAccountUseCase(
+        IAccountRepository accountRepository,
+        IUnitOfWork unitOfWork,
+        IAccountCacheRepository accountCacheRepository,
+        IDomainEventDispatcher domainEventDispatcher,
+        IAccountEventFactory accountEventFactory)
     {
         _accountRepository = accountRepository;
         _unitOfWork = unitOfWork;
+        _accountCacheRepository = accountCacheRepository;
+        _domainEventDispatcher = domainEventDispatcher;
+        _accountEventFactory = accountEventFactory;
     }
 
     public async Task<Result> ExecuteAsync(Guid accountId, CancellationToken cancellationToken = default)
@@ -22,7 +36,16 @@ public class DeleteAccountUseCase : IDeleteAccountUseCase
         account.MarkAsDeleted();
 
         _accountRepository.Update(account);
+
+        await _domainEventDispatcher.EnqueueAsync([
+                _accountEventFactory.Deleted(account),
+                _accountEventFactory.Updated(account)
+           ], cancellationToken: cancellationToken
+        );
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await AccountCacheInvalidation.InvalidateAsync(_accountCacheRepository, account, cancellationToken);
 
         return Result.Ok();
     }

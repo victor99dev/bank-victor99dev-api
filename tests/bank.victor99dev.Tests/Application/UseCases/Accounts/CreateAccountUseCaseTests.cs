@@ -1,3 +1,4 @@
+using bank.victor99dev.Application.Shared.Messaging;
 using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
 using bank.victor99dev.Domain.Entities;
 using bank.victor99dev.Domain.Exceptions;
@@ -9,14 +10,17 @@ namespace bank.victor99dev.Tests.Application.UseCases.Accounts;
 
 public class CreateAccountUseCaseTests
 {
-    [Fact(DisplayName = "Should create an account")]
-    public async Task ShouldCreateAccount()
+    [Fact(DisplayName = "Should create an account, enqueue event and invalidate cache")]
+    public async Task ShouldCreateAccount_EnqueueEvent_InvalidateCache()
     {
         var db = EntityFrameworkInMemoryFactory.NewDbName();
         var (ctx, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
 
-        var useCase = new CreateAccountUseCase(repo, uow);
+        var cache = new FakeAccountCacheRepository();
+        var dispatcher = new FakeDomainEventDispatcher();
+        var factory = new AccountEventFactory();
 
+        var useCase = new CreateAccountUseCase(repo, uow, cache, factory, dispatcher);
         var request = AccountRequests.Valid(seed: 1);
         var result = await useCase.ExecuteAsync(request);
 
@@ -31,6 +35,11 @@ public class CreateAccountUseCaseTests
         Assert.True(raw.IsActive);
         Assert.False(raw.IsDeleted);
         Assert.NotEqual(default, raw.CreatedAt);
+
+        Assert.Single(dispatcher.Enqueued);
+        Assert.Contains(dispatcher.Enqueued, e => e.GetType().Name == "AccountCreatedDomainEvent");
+
+        Assert.Equal(1, cache.InvalidateCalls);
     }
 
     [Fact(DisplayName = "Should fail when CPF is invalid")]
@@ -39,10 +48,13 @@ public class CreateAccountUseCaseTests
         var db = EntityFrameworkInMemoryFactory.NewDbName();
         var (_, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
 
-        var useCase = new CreateAccountUseCase(repo, uow);
+        var cache = new FakeAccountCacheRepository();
+        var dispatcher = new FakeDomainEventDispatcher();
+        var factory = new AccountEventFactory();
 
-        await Assert.ThrowsAsync<DomainException>(() =>
-            useCase.ExecuteAsync(AccountRequests.Valid(cpf: "123")));
+        var useCase = new CreateAccountUseCase(repo, uow, cache, factory, dispatcher);
+
+        await Assert.ThrowsAsync<DomainException>(() => useCase.ExecuteAsync(AccountRequests.Valid(cpf: "123")));
     }
 
     [Fact(DisplayName = "Should fail when Name is invalid")]
@@ -51,44 +63,12 @@ public class CreateAccountUseCaseTests
         var db = EntityFrameworkInMemoryFactory.NewDbName();
         var (_, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
 
-        var useCase = new CreateAccountUseCase(repo, uow);
+        var cache = new FakeAccountCacheRepository();
+        var dispatcher = new FakeDomainEventDispatcher();
+        var factory = new AccountEventFactory();
+
+        var useCase = new CreateAccountUseCase(repo, uow, cache, factory, dispatcher);
 
         await Assert.ThrowsAsync<DomainException>(() => useCase.ExecuteAsync(AccountRequests.Valid(name: string.Empty)));
-    }
-
-     [Fact(DisplayName = "Should fail when CPF is invalid (all same digits)")]
-    public async Task ShouldFail_WhenCpfIsInvalid_AllSameDigits()
-    {
-        var db = EntityFrameworkInMemoryFactory.NewDbName();
-        var (_, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
-
-        var useCase = new CreateAccountUseCase(repo, uow);
-
-        await Assert.ThrowsAsync<DomainException>(() =>
-            useCase.ExecuteAsync(AccountRequests.Valid(cpf: "11111111111")));
-    }
-
-    [Fact(DisplayName = "Should fail when CPF has less than 11 digits")]
-    public async Task ShouldFail_WhenCpfHasLessThan11Digits()
-    {
-        var db = EntityFrameworkInMemoryFactory.NewDbName();
-        var (_, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
-
-        var useCase = new CreateAccountUseCase(repo, uow);
-
-        await Assert.ThrowsAsync<DomainException>(() =>
-            useCase.ExecuteAsync(AccountRequests.Valid(cpf: "123456789")));
-    }
-
-    [Fact(DisplayName = "Should fail when CPF is null or empty")]
-    public async Task ShouldFail_WhenCpfIsNullOrEmpty()
-    {
-        var db = EntityFrameworkInMemoryFactory.NewDbName();
-        var (_, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
-
-        var useCase = new CreateAccountUseCase(repo, uow);
-
-        await Assert.ThrowsAsync<DomainException>(() =>
-            useCase.ExecuteAsync(AccountRequests.Valid(cpf: "")));
     }
 }

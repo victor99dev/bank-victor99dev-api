@@ -1,3 +1,4 @@
+using bank.victor99dev.Application.Shared.Messaging;
 using bank.victor99dev.Application.Shared.Results;
 using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.GetAccountById;
@@ -15,13 +16,15 @@ public class GetAccountByIdUseCaseTests
         var db = EntityFrameworkInMemoryFactory.NewDbName();
         var (_, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
 
+        var cache = new FakeAccountCacheRepository();
+        var dispatcher = new FakeDomainEventDispatcher();
+        var factory = new AccountEventFactory();
+
         var request = AccountRequests.Valid(seed: 1);
-        var created = await new CreateAccountUseCase(repo, uow).ExecuteAsync(request);
+        var created = await new CreateAccountUseCase(repo, uow, cache, factory, dispatcher).ExecuteAsync(request);
         var id = created.Data!.Id;
 
-        var cache = new FakeAccountCacheRepository();
         var useCase = new GetAccountByIdUseCase(repo, cache);
-
         var result = await useCase.ExecuteAsync(id);
 
         Assert.True(result.IsSuccess);
@@ -47,11 +50,14 @@ public class GetAccountByIdUseCaseTests
         var db = EntityFrameworkInMemoryFactory.NewDbName();
         var (_, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
 
+        var cache = new FakeAccountCacheRepository();
+        var dispatcher = new FakeDomainEventDispatcher();
+        var factory = new AccountEventFactory();
+
         var request = AccountRequests.Valid(seed: 1);
-        var created = await new CreateAccountUseCase(repo, uow).ExecuteAsync(request);
+        var created = await new CreateAccountUseCase(repo, uow, cache, factory, dispatcher).ExecuteAsync(request);
         var id = created.Data!.Id;
 
-        var cache = new FakeAccountCacheRepository();
         cache.Seed(new AccountResponse
         {
             Id = id,
@@ -63,8 +69,9 @@ public class GetAccountByIdUseCaseTests
             UpdatedAt = DateTime.UtcNow
         });
 
-        var useCase = new GetAccountByIdUseCase(repo, cache);
+        var setBefore = cache.SetCalls;
 
+        var useCase = new GetAccountByIdUseCase(repo, cache);
         var result = await useCase.ExecuteAsync(id);
 
         Assert.True(result.IsSuccess);
@@ -74,7 +81,7 @@ public class GetAccountByIdUseCaseTests
         Assert.Equal(request.Cpf, result.Data.Cpf);
 
         Assert.Equal(1, cache.GetByIdCalls);
-        Assert.Equal(0, cache.SetCalls);
+        Assert.Equal(setBefore, cache.SetCalls);
         Assert.Equal(0, cache.GetByCpfCalls);
     }
 
