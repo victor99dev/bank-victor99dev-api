@@ -1,7 +1,7 @@
 namespace bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
 
-public class CreateAccountRequest
+public sealed record class CreateAccountRequest
 {
-    public required string Name {get; set; }
-    public required string Cpf {get; set; }
+    public required string Name { get; init; }
+    public required string Cpf { get; init; }
 }
