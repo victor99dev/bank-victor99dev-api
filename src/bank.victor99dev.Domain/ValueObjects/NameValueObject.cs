@@ -16,8 +16,8 @@ public class NameValueObject
         if (value.Length < 3)
             throw new DomainException($"Name must contain at least 3 characters.");
 
-        if (value.Length > 20)
-            throw new DomainException($"Name must contain at most 20 characters.");
+        if (value.Length > 100)
+            throw new DomainException($"Name must contain at most 100 characters.");
 
         Value = value;
     }

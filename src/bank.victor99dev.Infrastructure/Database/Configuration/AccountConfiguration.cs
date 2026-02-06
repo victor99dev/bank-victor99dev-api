@@ -14,7 +14,7 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.OwnsOne(x => x.AccountName)
             .Property(p => p.Value)
             .HasColumnName("account_name")
-            .HasMaxLength(20)
+            .HasMaxLength(100)
             .IsRequired();
 
         builder.OwnsOne(x => x.Cpf)
