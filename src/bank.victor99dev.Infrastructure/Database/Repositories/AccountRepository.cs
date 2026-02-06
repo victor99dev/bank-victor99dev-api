@@ -15,15 +15,15 @@ public class AccountRepository : IAccountRepository
 
     public async Task<Account> CreateAsync(Account entity, CancellationToken cancellationToken = default)
     {
-            await _dbContext.AddAsync(entity, cancellationToken);
-            return entity;
+        await _dbContext.AddAsync(entity, cancellationToken);
+        return entity;
     }
 
     public async Task<Account?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-           return await _dbContext.Set<Account>()
-            .AsNoTracking()
-            .FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
+        return await _dbContext.Set<Account>()
+         .AsNoTracking()
+         .FirstOrDefaultAsync(e => e.Id.Equals(id), cancellationToken);
     }
 
     public async Task<(IReadOnlyList<Account> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken = default)
@@ -40,8 +40,5 @@ public class AccountRepository : IAccountRepository
 
         return (items, total);
     }
-
-    public void Remove(Account account) => _dbContext.Accounts.Update(account);
-    
-    public void Update(Account account) => _dbContext.Accounts.Remove(account);
+    public void Update(Account account) => _dbContext.Accounts.Update(account);
 }

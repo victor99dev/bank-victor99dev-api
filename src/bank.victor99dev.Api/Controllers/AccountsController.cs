@@ -1,7 +1,9 @@
 using bank.victor99dev.Application.Shared.Pagination;
 using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
+using bank.victor99dev.Application.UseCases.Accounts.DeleteAccount;
 using bank.victor99dev.Application.UseCases.Accounts.GetAccountById;
 using bank.victor99dev.Application.UseCases.Accounts.GetAccountsPaged;
+using bank.victor99dev.Application.UseCases.Accounts.RestoreAccount;
 using bank.victor99dev.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,16 +17,22 @@ public class AccountsController : BaseApiController
     private readonly ICreateAccountUseCase _createAccountUseCase;
     private readonly IGetAccountByIdUseCase _getAccountByIdUseCase;
     private readonly IGetAccountsPagedUseCase _getAccountsPagedUseCase;
+    private readonly IDeleteAccountUseCase _deleteAccountUseCase;
+    private readonly IRestoreAccountUseCase _restoreAccountUseCase;
     public AccountsController(
         ILogger<AccountsController> logger,
         ICreateAccountUseCase createAccountUseCase,
         IGetAccountByIdUseCase getAccountByIdUseCase,
-        IGetAccountsPagedUseCase getAccountsPagedUseCase)
+        IGetAccountsPagedUseCase getAccountsPagedUseCase,
+        IDeleteAccountUseCase deleteAccountUseCase,
+        IRestoreAccountUseCase restoreAccountUseCase)
     {
         _logger = logger;
         _createAccountUseCase = createAccountUseCase;
         _getAccountByIdUseCase = getAccountByIdUseCase;
         _getAccountsPagedUseCase = getAccountsPagedUseCase;
+        _deleteAccountUseCase = deleteAccountUseCase;
+        _restoreAccountUseCase = restoreAccountUseCase;
     }
 
     [HttpPost]
@@ -33,9 +41,9 @@ public class AccountsController : BaseApiController
         try
         {
             var result = await _createAccountUseCase.ExecuteAsync(request, cancellationToken);
-            
+
             LogResult(_logger, result, nameof(CreateAccount));
-            
+
             return FromResult(result);
         }
         catch (DomainException ex)
@@ -50,7 +58,7 @@ public class AccountsController : BaseApiController
         }
     }
 
-    
+
     [HttpGet("{accountId}")]
     public async Task<IActionResult> GetAccountById([FromRoute] Guid accountId, CancellationToken cancellationToken)
     {
@@ -91,6 +99,50 @@ public class AccountsController : BaseApiController
         catch (Exception ex)
         {
             LogUnexpected(_logger, ex, nameof(GetAccountPaged));
+            return UnexpectedProblem();
+        }
+    }
+
+    [HttpDelete("{accountId}")]
+    public async Task<IActionResult> DeleteAccount([FromRoute] Guid accountId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _deleteAccountUseCase.ExecuteAsync(accountId, cancellationToken);
+
+            LogResult(_logger, result, nameof(DeleteAccount));
+            return FromResult(result);
+        }
+        catch (DomainException ex)
+        {
+            LogDomain(_logger, ex, nameof(DeleteAccount));
+            return DomainProblem(ex);
+        }
+        catch (Exception ex)
+        {
+            LogUnexpected(_logger, ex, nameof(DeleteAccount));
+            return UnexpectedProblem();
+        }
+    }
+
+    [HttpPatch("{accountId}/restore")]
+    public async Task<IActionResult> RestoreAccount([FromRoute] Guid accountId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _restoreAccountUseCase.ExecuteAsync(accountId, cancellationToken);
+
+            LogResult(_logger, result, nameof(RestoreAccount));
+            return FromResult(result);
+        }
+        catch (DomainException ex)
+        {
+            LogDomain(_logger, ex, nameof(RestoreAccount));
+            return DomainProblem(ex);
+        }
+        catch (Exception ex)
+        {
+            LogUnexpected(_logger, ex, nameof(RestoreAccount));
             return UnexpectedProblem();
         }
     }
