@@ -7,7 +7,7 @@ namespace bank.victor99dev.Domain.Entities
     {
         public Guid Id { get; private set; }
         public NameValueObject AccountName { get; private set; }
-        public CpfValueObject Cpf { get; private set; } = default!;
+        public CpfValueObject Cpf { get; private set; }
         public bool IsActive { get; private set; }
         public bool IsDeleted { get; private set; }
         public DateTime CreatedAt { get; private set; }
@@ -15,30 +15,55 @@ namespace bank.victor99dev.Domain.Entities
 
         protected Account() { }
 
-        public static Account Create(NameValueObject accountName, CpfValueObject cpf)
+        public static Account Create(string accountName, string cpf)
         {
             return new Account
             {
                 Id = Guid.NewGuid(),
-                AccountName = accountName,
-                Cpf = cpf,
+                AccountName = new NameValueObject(accountName),
+                Cpf = new CpfValueObject(cpf),
                 IsActive = true,
                 IsDeleted = false,
                 CreatedAt = DateTime.UtcNow
             };
         }
 
-        public void Update(NameValueObject accountName)
+        public void Update(string accountName, string cpf, bool isActive, bool isDeleted)
         {
-            AccountName = accountName;
+            if (IsDeleted)
+                throw new DomainException("Cannot update account details because the account is deleted. Restore it first.");
+
+            AccountName = new NameValueObject(accountName);
+            Cpf = new CpfValueObject(cpf);
+            IsActive = isActive;
+            IsDeleted = isDeleted;
+
+            SetUpdatedAt();
+        }
+
+        public void ChangeName(string accountName)
+        {
+            if (IsDeleted)
+                throw new DomainException("Cannot change the account name because the account is deleted. Restore it first.");
+
+            AccountName = new NameValueObject(accountName);
+            SetUpdatedAt();
+        }
+
+        public void ChangeCpf(string cpf)
+        {
+            if (IsDeleted)
+                throw new DomainException("Cannot change the account CPF because the account is deleted. Restore it first.");
+
+            Cpf = new CpfValueObject(cpf);
             SetUpdatedAt();
         }
 
         public void Activate()
         {
-            if(IsDeleted)
-                throw new DomainException("Cannot activate a deleted account. Restore it before activating.");
-            
+            if (IsDeleted)
+                throw new DomainException("Cannot activate a deleted account. Restore it first.");
+
             if (IsActive) return;
 
             IsActive = true;
@@ -48,7 +73,7 @@ namespace bank.victor99dev.Domain.Entities
         public void Deactivate()
         {
             if (!IsActive)
-                throw new DomainException("Account is already deactivated.");
+                throw new DomainException("Account is already inactive.");
 
             IsActive = false;
             SetUpdatedAt();
@@ -56,8 +81,8 @@ namespace bank.victor99dev.Domain.Entities
 
         public void MarkAsDeleted()
         {
-            if(IsDeleted)
-                throw new DomainException("The account is already marked as deleted.");
+            if (IsDeleted)
+                throw new DomainException("Account is already deleted.");
             IsDeleted = true;
             IsActive = false;
             SetUpdatedAt();
@@ -65,8 +90,8 @@ namespace bank.victor99dev.Domain.Entities
 
         public void Restore()
         {
-            if(IsDeleted is false)
-                throw new DomainException("Cannot restore a account that is not deleted.");
+            if (IsDeleted is false)
+                throw new DomainException("Cannot restore an account that is not deleted.");
             IsDeleted = false;
             IsActive = true;
             SetUpdatedAt();
