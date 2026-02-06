@@ -1,4 +1,6 @@
+using bank.victor99dev.Application.Interfaces.CacheRepository;
 using bank.victor99dev.Application.Interfaces.Repository;
+using bank.victor99dev.Application.Shared.Cache;
 using bank.victor99dev.Application.Shared.Results;
 using bank.victor99dev.Application.UseCases.Accounts.Shared;
 
@@ -8,11 +10,12 @@ public class UpdateAccountUseCase : IUpdateAccountUseCase
 {
     private readonly IAccountRepository _accountRepository;
     private readonly IUnitOfWork _unitOfWork;
-
-    public UpdateAccountUseCase(IAccountRepository accountRepository, IUnitOfWork unitOfWork)
+    private readonly IAccountCacheRepository _accountCacheRepository;
+    public UpdateAccountUseCase(IAccountRepository accountRepository, IUnitOfWork unitOfWork, IAccountCacheRepository accountCacheRepository)
     {
         _accountRepository = accountRepository;
         _unitOfWork = unitOfWork;
+        _accountCacheRepository = accountCacheRepository;
     }
 
     public async Task<Result<AccountResponse>> ExecuteAsync(Guid accountId, UpdateAccountRequest request, CancellationToken cancellationToken = default)
@@ -20,7 +23,9 @@ public class UpdateAccountUseCase : IUpdateAccountUseCase
         var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken);
         if (account is null)
             return Result.Fail<AccountResponse>($"The account id {accountId} was not found.", ResultStatus.NotFound);
-
+        
+        var oldCpf = account.Cpf.Value;
+        
         account.Update(
             accountName: request.Name,
             cpf: request.Cpf,
@@ -30,6 +35,8 @@ public class UpdateAccountUseCase : IUpdateAccountUseCase
 
         _accountRepository.Update(account);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        await AccountCacheInvalidation.InvalidateWithOldCpfAsync(_accountCacheRepository, account, oldCpf, cancellationToken);
 
         var response = new AccountResponse
         {
