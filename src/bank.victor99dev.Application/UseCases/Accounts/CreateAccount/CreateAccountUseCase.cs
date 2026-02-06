@@ -36,6 +36,10 @@ public class CreateAccountUseCase : ICreateAccountUseCase
             cpf: request.Cpf
         );
 
+        var cpfAccount = await _accountRepository.GetByCpfAsync(account.Cpf.Value, cancellationToken);
+        if (cpfAccount is not null)
+            return Result.Fail<AccountResponse>($"An account with CPF {account.Cpf.Value} already exists.", ResultStatus.Conflict);
+
         await _accountRepository.CreateAsync(account, cancellationToken);
 
         await _domainEventDispatcher.EnqueueAsync([_accountEventFactory.Created(account)], cancellationToken: cancellationToken);
