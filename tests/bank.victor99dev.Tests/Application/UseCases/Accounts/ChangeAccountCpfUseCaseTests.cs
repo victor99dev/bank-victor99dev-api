@@ -1,3 +1,4 @@
+using bank.victor99dev.Application.Shared.Messaging;
 using bank.victor99dev.Application.Shared.Results;
 using bank.victor99dev.Application.UseCases.Accounts.ChangeAccountCpf;
 using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
@@ -14,13 +15,15 @@ public class ChangeAccountCpfUseCaseTests
         var db = EntityFrameworkInMemoryFactory.NewDbName();
         var (_, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
 
+        var cache = new FakeAccountCacheRepository();
+        var dispatcher = new FakeDomainEventDispatcher();
+        var factory = new AccountEventFactory();
+
         var request = AccountRequests.Valid(seed: 1);
-        var created = await new CreateAccountUseCase(repo, uow).ExecuteAsync(request);
+        var created = await new CreateAccountUseCase(repo, uow, cache, factory, dispatcher).ExecuteAsync(request);
 
         var id = created.Data!.Id;
         var oldCpf = request.Cpf;
-
-        var cache = new FakeAccountCacheRepository();
 
         cache.Seed(new()
         {
@@ -33,12 +36,11 @@ public class ChangeAccountCpfUseCaseTests
             UpdatedAt = DateTime.UtcNow
         });
 
-        var useCase = new ChangeAccountCpfUseCase(repo, uow, cache);
+        var invalidateBefore = cache.InvalidateCalls;
+        var eventsBefore = dispatcher.Enqueued.Count;
 
-        var change = new ChangeAccountCpfRequest
-        {
-            Cpf = "39053344705"
-        };
+        var useCase = new ChangeAccountCpfUseCase(repo, uow, cache);
+        var change = new ChangeAccountCpfRequest { Cpf = "39053344705" };
 
         var result = await useCase.ExecuteAsync(id, change);
 
@@ -49,10 +51,12 @@ public class ChangeAccountCpfUseCaseTests
         Assert.Equal(created.Data!.Name, result.Data.Name);
         Assert.Equal("39053344705", result.Data.Cpf);
 
-        Assert.Equal(2, cache.InvalidateCalls);
+        Assert.Equal(invalidateBefore + 2, cache.InvalidateCalls);
         Assert.False(cache.ContainsId(id));
         Assert.False(cache.ContainsCpf(oldCpf));
         Assert.False(cache.ContainsCpf("39053344705"));
+
+        Assert.Equal(eventsBefore, dispatcher.Enqueued.Count);
     }
 
     [Fact(DisplayName = "Should return NotFound when account does not exist")]
@@ -62,12 +66,11 @@ public class ChangeAccountCpfUseCaseTests
         var (_, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
 
         var cache = new FakeAccountCacheRepository();
-        var useCase = new ChangeAccountCpfUseCase(repo, uow, cache);
+        var dispatcher = new FakeDomainEventDispatcher();
+        var factory = new AccountEventFactory();
 
-        var change = new ChangeAccountCpfRequest
-        {
-            Cpf = "39053344705"
-        };
+        var useCase = new ChangeAccountCpfUseCase(repo, uow, cache);
+        var change = new ChangeAccountCpfRequest { Cpf = "39053344705" };
 
         var result = await useCase.ExecuteAsync(Guid.NewGuid(), change);
 
@@ -76,5 +79,6 @@ public class ChangeAccountCpfUseCaseTests
         Assert.Null(result.Data);
 
         Assert.Equal(0, cache.InvalidateCalls);
+        Assert.Empty(dispatcher.Enqueued);
     }
 }

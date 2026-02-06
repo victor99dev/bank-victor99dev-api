@@ -1,3 +1,4 @@
+using bank.victor99dev.Application.Shared.Messaging;
 using bank.victor99dev.Application.Shared.Pagination;
 using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.GetAccountsPaged;
@@ -14,7 +15,11 @@ public class GetAccountsPagedUseCaseTests
         var db = EntityFrameworkInMemoryFactory.NewDbName();
         var (_, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
 
-        var create = new CreateAccountUseCase(repo, uow);
+        var cache = new FakeAccountCacheRepository();
+        var dispatcher = new FakeDomainEventDispatcher();
+        var factory = new AccountEventFactory();
+
+        var create = new CreateAccountUseCase(repo, uow, cache, factory, dispatcher);
 
         for (var i = 1; i <= 5; i++)
         {
@@ -44,7 +49,11 @@ public class GetAccountsPagedUseCaseTests
         var db = EntityFrameworkInMemoryFactory.NewDbName();
         var (_, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
 
-        var create = new CreateAccountUseCase(repo, uow);
+        var cache = new FakeAccountCacheRepository();
+        var dispatcher = new FakeDomainEventDispatcher();
+        var factory = new AccountEventFactory();
+
+        var create = new CreateAccountUseCase(repo, uow, cache, factory, dispatcher);
 
         for (var i = 1; i <= 5; i++)
         {
