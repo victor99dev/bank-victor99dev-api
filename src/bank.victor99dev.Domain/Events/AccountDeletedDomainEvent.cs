@@ -2,8 +2,11 @@ using bank.victor99dev.Domain.Interfaces.Events;
 
 namespace bank.victor99dev.Domain.Events;
 
-public sealed record AccountDeletedDomainEvent(Guid EventId, DateTimeOffset OccurredOnUtc, Guid AccountId) : IDomainEvent, IHasAggregateKey
+public sealed record class AccountDeletedDomainEvent : IDomainEvent, IHasAggregateKey
 {
+    public Guid EventId { get; init; }
+    public DateTimeOffset OccurredOnUtc { get; init; }
+    public Guid AccountId { get; init; }
     public string AggregateId => AccountId.ToString("N");
     public string? Key => AggregateId;
 }

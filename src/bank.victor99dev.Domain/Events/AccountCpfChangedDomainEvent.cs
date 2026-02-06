@@ -1,9 +1,14 @@
+using bank.victor99dev.Domain.Events.Bodies;
 using bank.victor99dev.Domain.Interfaces.Events;
 
 namespace bank.victor99dev.Domain.Events;
 
-public sealed record AccountCpfChangedDomainEvent(Guid EventId, DateTimeOffset OccurredOnUtc, Guid AccountId, string OldCpf, string NewCpf) : IDomainEvent, IHasAggregateKey
+public sealed record class AccountCpfChangedDomainEvent : IDomainEvent, IHasAggregateKey
 {
-    public string AggregateId => AccountId.ToString("N");
+    public Guid EventId { get; init; }
+    public DateTimeOffset OccurredOnUtc { get; init; }
+    public AccountCpfChangedBody Body { get; init; } = new();
+
+    public string AggregateId => Body.AccountId.ToString("N");
     public string? Key => AggregateId;
 }
