@@ -10,15 +10,14 @@ public sealed class FakeAccountCacheRepository : IAccountCacheRepository
 
     public int GetByIdCalls { get; private set; }
     public int GetByCpfCalls { get; private set; }
-    public int SetByIdCalls { get; private set; }
-    public int SetByCpfCalls { get; private set; }
+    public int SetCalls { get; private set; }
     public int InvalidateCalls { get; private set; }
 
     public Task<AccountResponse?> GetByIdAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
         GetByIdCalls++;
         _byId.TryGetValue(accountId, out var value);
-        return Task.FromResult<AccountResponse?>(value);
+        return Task.FromResult(value);
     }
 
     public Task<AccountResponse?> GetByCpfAsync(string cpf, CancellationToken cancellationToken = default)
@@ -26,20 +25,14 @@ public sealed class FakeAccountCacheRepository : IAccountCacheRepository
         GetByCpfCalls++;
         var normalized = cpf.Trim();
         _byCpf.TryGetValue(normalized, out var value);
-        return Task.FromResult<AccountResponse?>(value);
+        return Task.FromResult(value);
     }
 
-    public Task SetByIdAsync(AccountResponse account, TimeSpan ttl, CancellationToken cancellationToken = default)
+    public Task SetAsync(AccountResponse account, TimeSpan cacheTtl, CancellationToken cancellationToken = default)
     {
-        SetByIdCalls++;
+        SetCalls++;
         _byId[account.Id] = account;
-        return Task.CompletedTask;
-    }
-
-    public Task SetByCpfAsync(string cpf, AccountResponse account, TimeSpan ttl, CancellationToken cancellationToken = default)
-    {
-        SetByCpfCalls++;
-        _byCpf[cpf.Trim()] = account;
+        _byCpf[account.Cpf.Trim()] = account;
         return Task.CompletedTask;
     }
 

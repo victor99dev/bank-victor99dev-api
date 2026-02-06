@@ -37,9 +37,7 @@ public class GetAccountByIdUseCase : IGetAccountByIdUseCase
             UpdatedAt = account.UpdatedAt
         };
 
-        var ttl = CacheTtl.UntilEndOfDayUtc();
-        await _accountCacheRepository.SetByIdAsync(response, ttl, cancellationToken);
-        await _accountCacheRepository.SetByCpfAsync(response.Cpf, response, ttl, cancellationToken);
+         await _accountCacheRepository.SetAsync(response, CacheTtl.CacheExpiresAtEndOfDayUtc(), cancellationToken);;
 
         return Result<AccountResponse>.Ok(data: response);
     }

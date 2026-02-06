@@ -4,7 +4,6 @@ using bank.victor99dev.Application.UseCases.Accounts.GetAccountById;
 using bank.victor99dev.Application.UseCases.Accounts.Shared;
 using bank.victor99dev.Tests.Application.Shared;
 using bank.victor99dev.Tests.Infrastructure.Shared;
-using Xunit;
 
 namespace bank.victor99dev.Tests.Application.UseCases.Accounts;
 
@@ -36,8 +35,7 @@ public class GetAccountByIdUseCaseTests
 
         Assert.Equal(1, cache.GetByIdCalls);
         Assert.Equal(0, cache.GetByCpfCalls);
-        Assert.Equal(1, cache.SetByIdCalls);
-        Assert.Equal(1, cache.SetByCpfCalls);
+        Assert.Equal(1, cache.SetCalls);
 
         Assert.True(cache.ContainsId(id));
         Assert.True(cache.ContainsCpf(request.Cpf));
@@ -76,8 +74,8 @@ public class GetAccountByIdUseCaseTests
         Assert.Equal(request.Cpf, result.Data.Cpf);
 
         Assert.Equal(1, cache.GetByIdCalls);
-        Assert.Equal(0, cache.SetByIdCalls);
-        Assert.Equal(0, cache.SetByCpfCalls);
+        Assert.Equal(0, cache.SetCalls);
+        Assert.Equal(0, cache.GetByCpfCalls);
     }
 
     [Fact(DisplayName = "Should return NotFound when account does not exist")]
@@ -96,7 +94,7 @@ public class GetAccountByIdUseCaseTests
         Assert.Null(result.Data);
 
         Assert.Equal(1, cache.GetByIdCalls);
-        Assert.Equal(0, cache.SetByIdCalls);
-        Assert.Equal(0, cache.SetByCpfCalls);
+        Assert.Equal(0, cache.SetCalls);
+        Assert.Equal(0, cache.GetByCpfCalls);
     }
 }
