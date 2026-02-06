@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using bank.victor99dev.Application.Interfaces.CacheRepository;
 using bank.victor99dev.Application.Interfaces.Repository;
 using bank.victor99dev.Application.UseCases.Accounts.ActivateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
@@ -11,6 +12,7 @@ using bank.victor99dev.Application.UseCases.Accounts.RestoreAccount;
 using bank.victor99dev.Application.UseCases.Accounts.UpdateAccount;
 using bank.victor99dev.Infrastructure.Database.Context;
 using bank.victor99dev.Infrastructure.Database.Repositories;
+using bank.victor99dev.Infrastructure.DatabaseCache.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
@@ -21,8 +23,15 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
     b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
 
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
+    options.InstanceName = "bank-victor99dev:";
+});
+
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
+builder.Services.AddScoped<IAccountCacheRepository, AccountCacheRepository>();
 
 builder.Services.AddScoped<ICreateAccountUseCase, CreateAccountUseCase>();
 builder.Services.AddScoped<IGetAccountByIdUseCase, GetAccountByIdUseCase>();
