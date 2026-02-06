@@ -385,16 +385,16 @@ tests/
 
 ## My Links
 
-* GitHub: https://github.com/torugo99\
-* LinkedIn: https://www.linkedin.com/in/victor*go99/\
-* Website: https://victor99dev.website/
+* GitHub: https://github.com/torugo99
+* LinkedIn: https://www.linkedin.com/in/victor-hugo99
+* Website: https://victor99dev.website
 
 ---
 
 ### Credits and Acknowledgments
 
-* Official .NET documentation: https://learn.microsoft.com/dotnet/\
-* Swagger / OpenAPI: https://learn.microsoft.com/aspnet/core/tutorials/getting-started-with-swashbuckle\
-* PostgreSQL: https://www.postgresql.org/\
-* Redis: https://redis.io/\
-* Kafka concepts: https://kafka.apache.org/documentation/
+* Official .NET documentation: https://learn.microsoft.com/dotnet
+* Swagger / OpenAPI: https://learn.microsoft.com/aspnet/core/tutorials/getting-started-with-swashbuckle
+* PostgreSQL: https://www.postgresql.org
+* Redis: https://redis.io
+* Kafka concepts: https://kafka.apache.org/documentation
