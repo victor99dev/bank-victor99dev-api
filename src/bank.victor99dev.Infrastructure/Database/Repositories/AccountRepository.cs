@@ -19,6 +19,13 @@ public class AccountRepository : IAccountRepository
         return entity;
     }
 
+    public async Task<Account?> GetByCpfAsync(string cpf, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Set<Account>()
+         .AsNoTracking()
+         .FirstOrDefaultAsync(e => e.Cpf.Value.Equals(cpf), cancellationToken);
+    }
+
     public async Task<Account?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         return await _dbContext.Set<Account>()

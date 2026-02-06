@@ -5,6 +5,7 @@ namespace bank.victor99dev.Application.Interfaces.Repository;
 public interface IAccountRepository
 {
     Task<Account?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Account?> GetByCpfAsync(string cpf, CancellationToken cancellationToken);
     Task<(IReadOnlyList<Account> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, CancellationToken cancellationToken = default);
     Task<Account> CreateAsync(Account entity, CancellationToken cancellationToken = default);
     void Update(Account account);

@@ -3,6 +3,7 @@ using bank.victor99dev.Application.UseCases.Accounts.ActivateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.DeactivateAccount;
 using bank.victor99dev.Application.UseCases.Accounts.DeleteAccount;
+using bank.victor99dev.Application.UseCases.Accounts.GetAccountByCpf;
 using bank.victor99dev.Application.UseCases.Accounts.GetAccountById;
 using bank.victor99dev.Application.UseCases.Accounts.GetAccountsPaged;
 using bank.victor99dev.Application.UseCases.Accounts.RestoreAccount;
@@ -23,6 +24,7 @@ public class AccountsController : BaseApiController
     private readonly IRestoreAccountUseCase _restoreAccountUseCase;
     private readonly IDeactivateAccountUseCase _deactivateAccountUseCase;
     private readonly IActivateAccountUseCase _activateAccountUseCase;
+    private readonly IGetAccountByCpfUseCase _getAccountByCpfUseCase;
     public AccountsController(
         ILogger<AccountsController> logger,
         ICreateAccountUseCase createAccountUseCase,
@@ -31,7 +33,8 @@ public class AccountsController : BaseApiController
         IDeleteAccountUseCase deleteAccountUseCase,
         IRestoreAccountUseCase restoreAccountUseCase,
         IDeactivateAccountUseCase deactivateAccountUseCase,
-        IActivateAccountUseCase activateAccountUseCase)
+        IActivateAccountUseCase activateAccountUseCase,
+        IGetAccountByCpfUseCase getAccountByCpfUseCase)
     {
         _logger = logger;
         _createAccountUseCase = createAccountUseCase;
@@ -41,6 +44,7 @@ public class AccountsController : BaseApiController
         _restoreAccountUseCase = restoreAccountUseCase;
         _deactivateAccountUseCase = deactivateAccountUseCase;
         _activateAccountUseCase = activateAccountUseCase;
+        _getAccountByCpfUseCase = getAccountByCpfUseCase;
     }
 
     [HttpPost]
@@ -195,6 +199,28 @@ public class AccountsController : BaseApiController
         catch (Exception ex)
         {
             LogUnexpected(_logger, ex, nameof(ActivateAccount));
+            return UnexpectedProblem();
+        }
+    }
+
+    [HttpGet("{cpf}/cpf")]
+    public async Task<IActionResult> GetByCpf([FromRoute] string cpf, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await _getAccountByCpfUseCase.ExecuteAsync(cpf, cancellationToken);
+
+            LogResult(_logger, result, nameof(GetByCpf));
+            return FromResult(result);
+        }
+        catch (DomainException ex)
+        {
+            LogDomain(_logger, ex, nameof(GetByCpf));
+            return DomainProblem(ex);
+        }
+        catch (Exception ex)
+        {
+            LogUnexpected(_logger, ex, nameof(GetByCpf));
             return UnexpectedProblem();
         }
     }
