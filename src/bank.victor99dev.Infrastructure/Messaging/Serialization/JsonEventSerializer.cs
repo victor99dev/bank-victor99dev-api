@@ -1,7 +1,7 @@
 using System.Text.Json;
 using bank.victor99dev.Application.Interfaces.Messaging;
 
-namespace bank.victor99dev.Infrastructure.Messaging;
+namespace bank.victor99dev.Infrastructure.Messaging.Serialization;
 
 public sealed class JsonEventSerializer : IEventSerializer
 {

@@ -1,4 +1,4 @@
-using bank.victor99dev.Application.Interfaces.CacheRepository;
+using bank.victor99dev.Application.Interfaces.Caching;
 using bank.victor99dev.Application.UseCases.Accounts.Shared;
 
 namespace bank.victor99dev.Tests.Infrastructure.Shared;

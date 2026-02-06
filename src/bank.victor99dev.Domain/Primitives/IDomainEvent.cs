@@ -1,4 +1,4 @@
-namespace bank.victor99dev.Domain.Interfaces.Events;
+namespace bank.victor99dev.Domain.Primitives;
 
 public interface IDomainEvent
 {

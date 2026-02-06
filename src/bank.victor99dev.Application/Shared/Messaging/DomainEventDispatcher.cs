@@ -1,7 +1,6 @@
 using bank.victor99dev.Application.Dtos;
 using bank.victor99dev.Application.Interfaces.Messaging;
-using bank.victor99dev.Application.Interfaces.Messaging.MessagingRepository;
-using bank.victor99dev.Domain.Interfaces.Events;
+using bank.victor99dev.Domain.Primitives;
 
 namespace bank.victor99dev.Application.Shared.Messaging;
 

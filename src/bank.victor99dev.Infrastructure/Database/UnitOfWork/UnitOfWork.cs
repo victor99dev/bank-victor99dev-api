@@ -1,7 +1,7 @@
 using bank.victor99dev.Application.Interfaces.Repository;
 using bank.victor99dev.Infrastructure.Database.Context;
 
-namespace bank.victor99dev.Infrastructure.Database.Repositories;
+namespace bank.victor99dev.Infrastructure.Database.UnitOfWork;
 
 public class UnitOfWork : IUnitOfWork
 {

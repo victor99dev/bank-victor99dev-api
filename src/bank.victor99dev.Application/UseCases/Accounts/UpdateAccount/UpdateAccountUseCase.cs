@@ -1,10 +1,10 @@
-using bank.victor99dev.Application.Interfaces.CacheRepository;
+using bank.victor99dev.Application.Interfaces.Caching;
 using bank.victor99dev.Application.Interfaces.Messaging;
 using bank.victor99dev.Application.Interfaces.Repository;
 using bank.victor99dev.Application.Shared.Cache;
 using bank.victor99dev.Application.Shared.Results;
 using bank.victor99dev.Application.UseCases.Accounts.Shared;
-using bank.victor99dev.Domain.Interfaces.Events;
+using bank.victor99dev.Domain.Primitives;
 
 namespace bank.victor99dev.Application.UseCases.Accounts.UpdateAccount;
 

@@ -1,6 +1,6 @@
 using bank.victor99dev.Application.UseCases.Accounts.Shared;
 
-namespace bank.victor99dev.Application.Interfaces.CacheRepository;
+namespace bank.victor99dev.Application.Interfaces.Caching;
 
 public interface IAccountCacheRepository
 {

@@ -1,5 +1,5 @@
 using bank.victor99dev.Domain.Entities;
-using bank.victor99dev.Infrastructure.Messaging.Outbox;
+using bank.victor99dev.Infrastructure.Messaging.Outbox.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace bank.victor99dev.Infrastructure.Database.Context;

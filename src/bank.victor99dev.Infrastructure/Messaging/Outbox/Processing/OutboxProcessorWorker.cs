@@ -1,12 +1,12 @@
 using bank.victor99dev.Application.Interfaces.Messaging;
-using bank.victor99dev.Application.Interfaces.Messaging.MessagingRepository;
 using bank.victor99dev.Infrastructure.Configurations;
+using bank.victor99dev.Infrastructure.Messaging.Outbox.Envelope;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-namespace bank.victor99dev.Infrastructure.Messaging.Outbox;
+namespace bank.victor99dev.Infrastructure.Messaging.Outbox.Processing;
 
 public sealed class OutboxProcessorWorker : BackgroundService
 {
@@ -55,8 +55,9 @@ public sealed class OutboxProcessorWorker : BackgroundService
                 try
                 {
                     var key = item.Key ?? item.AggregateId ?? item.CorrelationId ?? item.Id.ToString("N");
+                    var message = OutboxEnvelopeBuilder.Build(item);
 
-                    await publisher.PublishAsync(cfg.TopicOutbox, key, item.Payload, cancellationToken);
+                    await publisher.PublishAsync(cfg.TopicOutbox, key, message, cancellationToken);
 
                     await outbox.MarkProcessedAsync(item.Id, DateTimeOffset.UtcNow, cancellationToken);
                 }

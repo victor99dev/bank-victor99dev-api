@@ -1,6 +1,6 @@
 using bank.victor99dev.Application.Dtos;
 
-namespace bank.victor99dev.Application.Interfaces.Messaging.MessagingRepository;
+namespace bank.victor99dev.Application.Interfaces.Messaging;
 
 public interface IOutboxRepository
 {

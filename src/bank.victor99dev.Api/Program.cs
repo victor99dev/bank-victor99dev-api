@@ -1,7 +1,6 @@
 using System.Text.Json.Serialization;
-using bank.victor99dev.Application.Interfaces.CacheRepository;
+using bank.victor99dev.Application.Interfaces.Caching;
 using bank.victor99dev.Application.Interfaces.Messaging;
-using bank.victor99dev.Application.Interfaces.Messaging.MessagingRepository;
 using bank.victor99dev.Application.Interfaces.Repository;
 using bank.victor99dev.Application.Shared.Messaging;
 using bank.victor99dev.Application.UseCases.Accounts.ActivateAccount;
@@ -15,13 +14,15 @@ using bank.victor99dev.Application.UseCases.Accounts.GetAccountById;
 using bank.victor99dev.Application.UseCases.Accounts.GetAccountsPaged;
 using bank.victor99dev.Application.UseCases.Accounts.RestoreAccount;
 using bank.victor99dev.Application.UseCases.Accounts.UpdateAccount;
+using bank.victor99dev.Infrastructure.Caching.Redis;
 using bank.victor99dev.Infrastructure.Configurations;
 using bank.victor99dev.Infrastructure.Database.Context;
 using bank.victor99dev.Infrastructure.Database.Repositories;
-using bank.victor99dev.Infrastructure.DatabaseCache.Repositories;
-using bank.victor99dev.Infrastructure.Messaging;
+using bank.victor99dev.Infrastructure.Database.UnitOfWork;
 using bank.victor99dev.Infrastructure.Messaging.Kafka;
-using bank.victor99dev.Infrastructure.Messaging.Outbox;
+using bank.victor99dev.Infrastructure.Messaging.Outbox.Persistence;
+using bank.victor99dev.Infrastructure.Messaging.Outbox.Processing;
+using bank.victor99dev.Infrastructure.Messaging.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
