@@ -1,4 +1,5 @@
 using bank.victor99dev.Application.Interfaces.Caching;
+using bank.victor99dev.Application.Interfaces.Messaging;
 using bank.victor99dev.Application.Interfaces.Repository;
 using bank.victor99dev.Application.Shared.Cache;
 using bank.victor99dev.Application.Shared.Results;
@@ -11,14 +12,20 @@ public class ChangeAccountCpfUseCase : IChangeAccountCpfUseCase
     private readonly IAccountRepository _accountRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAccountCacheRepository _accountCacheRepository;
+    private readonly IDomainEventDispatcher _domainEventDispatcher;
+    private readonly IAccountEventFactory _accountEventFactory;
     public ChangeAccountCpfUseCase(
         IAccountRepository accountRepository,
         IUnitOfWork unitOfWork,
-        IAccountCacheRepository accountCacheRepository)
+        IAccountCacheRepository accountCacheRepository,
+        IDomainEventDispatcher domainEventDispatcher,
+        IAccountEventFactory accountEventFactory)
     {
         _accountRepository = accountRepository;
         _unitOfWork = unitOfWork;
         _accountCacheRepository = accountCacheRepository;
+        _domainEventDispatcher = domainEventDispatcher;
+        _accountEventFactory = accountEventFactory;
     }
 
     public async Task<Result<AccountResponse>> ExecuteAsync(Guid accountId, ChangeAccountCpfRequest request, CancellationToken cancellationToken = default)
@@ -32,9 +39,18 @@ public class ChangeAccountCpfUseCase : IChangeAccountCpfUseCase
         account.ChangeCpf(request.Cpf);
 
         _accountRepository.Update(account);
+
+        await _domainEventDispatcher.EnqueueAsync([
+                _accountEventFactory.CpfChanged(account, oldCpf),
+                _accountEventFactory.Updated(account)
+            ],
+            cancellationToken: cancellationToken
+        );
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-        await AccountCacheInvalidation.InvalidateWithOldCpfAsync(_accountCacheRepository, account, oldCpf, cancellationToken);
+        await AccountCacheInvalidation.InvalidateWithOldCpfAsync(
+            _accountCacheRepository, account, oldCpf, cancellationToken);
 
         var response = new AccountResponse
         {

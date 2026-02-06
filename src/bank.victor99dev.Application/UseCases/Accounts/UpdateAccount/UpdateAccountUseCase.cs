@@ -14,16 +14,19 @@ public class UpdateAccountUseCase : IUpdateAccountUseCase
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAccountCacheRepository _accountCacheRepository;
     private readonly IAccountEventFactory _accountEventFactory;
+    private readonly IDomainEventDispatcher _domainEventDispatcher;
     public UpdateAccountUseCase(
         IAccountRepository accountRepository,
         IUnitOfWork unitOfWork,
         IAccountCacheRepository accountCacheRepository,
-        IAccountEventFactory accountEventFactory)
+        IAccountEventFactory accountEventFactory,
+        IDomainEventDispatcher domainEventDispatcher)
     {
         _accountRepository = accountRepository;
         _unitOfWork = unitOfWork;
         _accountCacheRepository = accountCacheRepository;
         _accountEventFactory = accountEventFactory;
+        _domainEventDispatcher = domainEventDispatcher;
     }
 
     public async Task<Result<AccountResponse>> ExecuteAsync(Guid accountId, UpdateAccountRequest request, CancellationToken cancellationToken = default)
@@ -55,6 +58,7 @@ public class UpdateAccountUseCase : IUpdateAccountUseCase
         events.Add(_accountEventFactory.Updated(account));
 
         await AccountCacheInvalidation.InvalidateWithOldCpfAsync(_accountCacheRepository, account, oldCpf, cancellationToken);
+        await _domainEventDispatcher.EnqueueAsync(events, cancellationToken: cancellationToken);
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
