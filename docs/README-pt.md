@@ -251,16 +251,25 @@ Esse consumer foi utilizado para validar:
 * Confirmação prática de que o ecossistema consegue reagir aos eventos sem dependência direta da API.
 
 ---
-## Comandos
 
+## Comandos
 | Comando | Descrição |
 |--------|-----------|
+| `dotnet clean` | Remove artefatos de build (pastas bin/ e obj/) |
+| `dotnet restore` | Restaura pacotes NuGet |
 | `dotnet build` | Compila a solução |
-| `dotnet run --project src/bank.victor99dev.Api` | Sobe a API |
-| `dotnet ef migrations add NomeMigracao -p src/bank.victor99dev.Infrastructure -s src/bank.victor99dev.Api` | Cria migration |
-| `dotnet ef database update -p src/bank.victor99dev.Infrastructure -s src/bank.victor99dev.Api` | Aplica migration |
+| `dotnet test` | Executa todos os testes automatizados |
+| `dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura` | Executa testes e gera relatório de cobertura em XML |
+| `dotnet run --project src/bank.victor99dev.Api` | Inicia a API localmente |
+| `dotnet ef migrations add NomeMigracao -p src/bank.victor99dev.Infrastructure -s src/bank.victor99dev.Api` | Cria uma migration |
+| `dotnet ef database update -p src/bank.victor99dev.Infrastructure -s src/bank.victor99dev.Api` | Aplica migrations |
+| `docker compose up -d --build` | Executa API + Postgres + Redis + Kafka |
+| `docker compose stop` | Para todos os containers (mantém dados) |
+| `docker compose down` | Para e remove containers (mantém volumes) |
+| `docker compose down -v` | Para e remove containers e apaga volumes |
 
-> Se estiver usando docker-compose, geralmente o banco já sobe pronto.
+
+> Para testar a aplicação com todas as dependências, basta executar: `docker compose up -d --build`.
 
 ---
 

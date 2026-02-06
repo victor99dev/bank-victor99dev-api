@@ -254,14 +254,23 @@ This consumer was used to validate:
 ------------------------------------------------------------------------
 
 ## Commands
-| Command | Description|
-|--------|-----------|
+| Command | Description |
+|--------|-------------|
+| `dotnet clean` | Removes build artifacts (bin/ and obj/) |
+| `dotnet restore` | Restores NuGet packages |
 | `dotnet build` | Builds the solution |
-| `dotnet run --project src/bank.victor99dev.Api` | Starts the API |
+| `dotnet test` | Runs all automated tests |
+| `dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura` | Runs tests and generates XML coverage report |
+| `dotnet run --project src/bank.victor99dev.Api` | Starts the API locally |
 | `dotnet ef migrations add NomeMigracao -p src/bank.victor99dev.Infrastructure -s src/bank.victor99dev.Api` | Creates a migration |
-| `dotnet ef database update -p src/bank.victor99dev.Infrastructure -s src/bank.victor99dev.Api` | Applies migration |
+| `dotnet ef database update -p src/bank.victor99dev.Infrastructure -s src/bank.victor99dev.Api` | Applies migrations |
+| `docker compose up -d --build` | Runs API + Postgres + Redis + Kafka |
+| `docker compose stop` | Stops all containers (keeps data) |
+| `docker compose down` | Stops and removes containers (keeps volumes) |
+| `docker compose down -v` | Stops and removes containers and deletes volumes |
 
-> If using docker-compose, the database usually starts automatically.
+
+> To test the application with all dependencies, simply run: `docker compose up -d --build`.
 
 ------------------------------------------------------------------------
 
