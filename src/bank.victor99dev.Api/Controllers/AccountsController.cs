@@ -7,6 +7,7 @@ using bank.victor99dev.Application.UseCases.Accounts.GetAccountByCpf;
 using bank.victor99dev.Application.UseCases.Accounts.GetAccountById;
 using bank.victor99dev.Application.UseCases.Accounts.GetAccountsPaged;
 using bank.victor99dev.Application.UseCases.Accounts.RestoreAccount;
+using bank.victor99dev.Application.UseCases.Accounts.UpdateAccount;
 using bank.victor99dev.Domain.Exceptions;
 using Microsoft.AspNetCore.Mvc;
 
@@ -25,6 +26,7 @@ public class AccountsController : BaseApiController
     private readonly IDeactivateAccountUseCase _deactivateAccountUseCase;
     private readonly IActivateAccountUseCase _activateAccountUseCase;
     private readonly IGetAccountByCpfUseCase _getAccountByCpfUseCase;
+    private readonly IUpdateAccountUseCase _updateAccountUseCase;
     public AccountsController(
         ILogger<AccountsController> logger,
         ICreateAccountUseCase createAccountUseCase,
@@ -34,7 +36,8 @@ public class AccountsController : BaseApiController
         IRestoreAccountUseCase restoreAccountUseCase,
         IDeactivateAccountUseCase deactivateAccountUseCase,
         IActivateAccountUseCase activateAccountUseCase,
-        IGetAccountByCpfUseCase getAccountByCpfUseCase)
+        IGetAccountByCpfUseCase getAccountByCpfUseCase,
+        IUpdateAccountUseCase updateAccountUseCase)
     {
         _logger = logger;
         _createAccountUseCase = createAccountUseCase;
@@ -45,6 +48,7 @@ public class AccountsController : BaseApiController
         _deactivateAccountUseCase = deactivateAccountUseCase;
         _activateAccountUseCase = activateAccountUseCase;
         _getAccountByCpfUseCase = getAccountByCpfUseCase;
+        _updateAccountUseCase = updateAccountUseCase;
     }
 
     [HttpPost]
@@ -221,6 +225,36 @@ public class AccountsController : BaseApiController
         catch (Exception ex)
         {
             LogUnexpected(_logger, ex, nameof(GetByCpf));
+            return UnexpectedProblem();
+        }
+    }
+
+    [HttpPut("{accountId}")]
+    public async Task<IActionResult> UpdateAccount([FromRoute] Guid accountId, [FromBody] UpdateAccountRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var requestBody = new UpdateAccountRequest
+            {
+                Name = request.Name,
+                Cpf = request.Cpf,
+                IsActive = request.IsActive,
+                IsDeleted = request.IsDeleted
+            };
+
+            var result = await _updateAccountUseCase.ExecuteAsync(accountId, requestBody, cancellationToken);
+
+            LogResult(_logger, result, nameof(UpdateAccount));
+            return FromResult(result);
+        }
+        catch (DomainException ex)
+        {
+            LogDomain(_logger, ex, nameof(UpdateAccount));
+            return DomainProblem(ex);
+        }
+        catch (Exception ex)
+        {
+            LogUnexpected(_logger, ex, nameof(UpdateAccount));
             return UnexpectedProblem();
         }
     }
