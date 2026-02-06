@@ -3,7 +3,7 @@ using bank.victor99dev.Application.Interfaces.Messaging;
 
 namespace bank.victor99dev.Infrastructure.Messaging;
 
-public class JsonEventSerializer : IEventSerializer
+public sealed class JsonEventSerializer : IEventSerializer
 {
     private static readonly JsonSerializerOptions Options = new()
     {
@@ -11,7 +11,9 @@ public class JsonEventSerializer : IEventSerializer
         WriteIndented = false
     };
 
-    public string Serialize<T>(T evt) => JsonSerializer.Serialize(evt, Options);
+    public string Serialize(object evt) =>
+        JsonSerializer.Serialize(evt, evt.GetType(), Options);
 
-    public string GetEventType<T>() => typeof(T).FullName ?? typeof(T).Name;
+    public string GetEventType(object evt) =>
+        evt.GetType().FullName ?? evt.GetType().Name;
 }

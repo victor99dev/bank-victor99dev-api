@@ -20,7 +20,7 @@ public sealed class DomainEventDispatcher : IDomainEventDispatcher
     {
         var items = events.Select(e =>
         {
-            var type = e.GetType().FullName ?? e.GetType().Name;
+            var type = _eventSerializer.GetEventType(e);
             var payload = _eventSerializer.Serialize(e);
 
             var agg = e as IHasAggregateKey;
