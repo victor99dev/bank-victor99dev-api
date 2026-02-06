@@ -30,6 +30,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\bank.victor99dev.Application\bank.victor99dev.Application.csproj" />
     <ProjectReference Include="..\..\src\bank.victor99dev.Domain\bank.victor99dev.Domain.csproj" />
+    <ProjectReference Include="..\..\src\bank.victor99dev.Infrastructure\bank.victor99dev.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -47,5 +47,22 @@ public class AccountRepository : IAccountRepository
 
         return (items, total);
     }
-    public void Update(Account account) => _dbContext.Accounts.Update(account);
+    public void Update(Account account)
+    {
+        account.SetUpdatedAt();
+        AttachAsModified(account);
+    }
+
+    private void AttachAsModified(Account account)
+    {
+        var local = _dbContext.Set<Account>()
+            .Local
+            .FirstOrDefault(e => e.Id == account.Id);
+
+        if (local is not null && !ReferenceEquals(local, account))
+            _dbContext.Entry(local).State = EntityState.Detached;
+
+        _dbContext.Attach(account);
+        _dbContext.Entry(account).State = EntityState.Modified;
+    }
 }
