@@ -1,4 +1,4 @@
-using bank.victor99dev.Application.Interfaces.CacheRepository;
+using bank.victor99dev.Application.Interfaces.Caching;
 using bank.victor99dev.Domain.Entities;
 
 namespace bank.victor99dev.Application.Shared.Cache;

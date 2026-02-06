@@ -1,4 +1,4 @@
-using bank.victor99dev.Application.Interfaces.CacheRepository;
+using bank.victor99dev.Application.Interfaces.Caching;
 using bank.victor99dev.Application.Interfaces.Messaging;
 using bank.victor99dev.Application.Interfaces.Repository;
 using bank.victor99dev.Application.Shared.Cache;

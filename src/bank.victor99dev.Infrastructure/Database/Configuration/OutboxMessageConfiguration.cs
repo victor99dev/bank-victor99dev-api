@@ -1,4 +1,4 @@
-using bank.victor99dev.Infrastructure.Messaging.Outbox;
+using bank.victor99dev.Infrastructure.Messaging.Outbox.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

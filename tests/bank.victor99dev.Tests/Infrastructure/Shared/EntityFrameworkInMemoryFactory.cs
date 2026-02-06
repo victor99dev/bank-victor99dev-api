@@ -2,6 +2,7 @@
 using bank.victor99dev.Application.Interfaces.Repository;
 using bank.victor99dev.Infrastructure.Database.Context;
 using bank.victor99dev.Infrastructure.Database.Repositories;
+using bank.victor99dev.Infrastructure.Database.UnitOfWork;
 using Microsoft.EntityFrameworkCore;
 
 namespace bank.victor99dev.Tests.Infrastructure.Shared;

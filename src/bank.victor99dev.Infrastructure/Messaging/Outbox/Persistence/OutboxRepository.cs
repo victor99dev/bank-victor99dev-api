@@ -1,9 +1,9 @@
 using bank.victor99dev.Application.Dtos;
-using bank.victor99dev.Application.Interfaces.Messaging.MessagingRepository;
+using bank.victor99dev.Application.Interfaces.Messaging;
 using bank.victor99dev.Infrastructure.Database.Context;
 using Microsoft.EntityFrameworkCore;
 
-namespace bank.victor99dev.Infrastructure.Messaging.Outbox;
+namespace bank.victor99dev.Infrastructure.Messaging.Outbox.Persistence;
 
 public sealed class OutboxRepository : IOutboxRepository
 {

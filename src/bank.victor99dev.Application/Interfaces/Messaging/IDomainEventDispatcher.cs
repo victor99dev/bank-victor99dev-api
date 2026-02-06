@@ -1,4 +1,4 @@
-using bank.victor99dev.Domain.Interfaces.Events;
+using bank.victor99dev.Domain.Primitives;
 
 namespace bank.victor99dev.Application.Interfaces.Messaging;
 

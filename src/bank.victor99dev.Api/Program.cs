@@ -1,68 +1,13 @@
 using System.Text.Json.Serialization;
-using bank.victor99dev.Application.Interfaces.CacheRepository;
-using bank.victor99dev.Application.Interfaces.Messaging;
-using bank.victor99dev.Application.Interfaces.Messaging.MessagingRepository;
-using bank.victor99dev.Application.Interfaces.Repository;
-using bank.victor99dev.Application.Shared.Messaging;
-using bank.victor99dev.Application.UseCases.Accounts.ActivateAccount;
-using bank.victor99dev.Application.UseCases.Accounts.ChangeAccountCpf;
-using bank.victor99dev.Application.UseCases.Accounts.ChangeAccountName;
-using bank.victor99dev.Application.UseCases.Accounts.CreateAccount;
-using bank.victor99dev.Application.UseCases.Accounts.DeactivateAccount;
-using bank.victor99dev.Application.UseCases.Accounts.DeleteAccount;
-using bank.victor99dev.Application.UseCases.Accounts.GetAccountByCpf;
-using bank.victor99dev.Application.UseCases.Accounts.GetAccountById;
-using bank.victor99dev.Application.UseCases.Accounts.GetAccountsPaged;
-using bank.victor99dev.Application.UseCases.Accounts.RestoreAccount;
-using bank.victor99dev.Application.UseCases.Accounts.UpdateAccount;
-using bank.victor99dev.Infrastructure.Configurations;
-using bank.victor99dev.Infrastructure.Database.Context;
-using bank.victor99dev.Infrastructure.Database.Repositories;
-using bank.victor99dev.Infrastructure.DatabaseCache.Repositories;
-using bank.victor99dev.Infrastructure.Messaging;
-using bank.victor99dev.Infrastructure.Messaging.Kafka;
-using bank.victor99dev.Infrastructure.Messaging.Outbox;
-using Microsoft.EntityFrameworkCore;
+using bank.victor99dev.Infrastructure;
+using bank.victor99dev.Application;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"),
-    b => b.MigrationsAssembly(typeof(AppDbContext).Assembly.FullName)));
-
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("RedisConnection");
-    options.InstanceName = "bank-victor99dev:";
-});
-
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<IAccountRepository, AccountRepository>();
-builder.Services.AddScoped<IAccountCacheRepository, AccountCacheRepository>();
-
-builder.Services.AddScoped<ICreateAccountUseCase, CreateAccountUseCase>();
-builder.Services.AddScoped<IGetAccountByIdUseCase, GetAccountByIdUseCase>();
-builder.Services.AddScoped<IGetAccountsPagedUseCase, GetAccountsPagedUseCase>();
-builder.Services.AddScoped<IActivateAccountUseCase, ActivateAccountUseCase>();
-builder.Services.AddScoped<IDeactivateAccountUseCase, DeactivateAccountUseCase>();
-builder.Services.AddScoped<IDeleteAccountUseCase, DeleteAccountUseCase>();
-builder.Services.AddScoped<IRestoreAccountUseCase, RestoreAccountUseCase>();
-builder.Services.AddScoped<IGetAccountByCpfUseCase, GetAccountByCpfUseCase>();
-builder.Services.AddScoped<IUpdateAccountUseCase, UpdateAccountUseCase>();
-builder.Services.AddScoped<IChangeAccountNameUseCase, ChangeAccountNameUseCase>();
-builder.Services.AddScoped<IChangeAccountCpfUseCase, ChangeAccountCpfUseCase>();
-
-
-builder.Services.Configure<KafkaConfigurationOptions>(builder.Configuration.GetSection("Kafka"));
-builder.Services.AddSingleton<IEventSerializer, JsonEventSerializer>();
-builder.Services.AddSingleton<IEventBusPublisher, KafkaPublisher>();
-builder.Services.AddScoped<IOutboxRepository, OutboxRepository>();
-builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
-builder.Services.AddHostedService<OutboxProcessorWorker>();
-
-builder.Services.AddScoped<IAccountEventFactory, AccountEventFactory>();
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

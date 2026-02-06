@@ -1,4 +1,4 @@
-namespace bank.victor99dev.Infrastructure.Messaging.Outbox;
+namespace bank.victor99dev.Infrastructure.Messaging.Outbox.Persistence;
 
 public class OutboxMessage
 {
