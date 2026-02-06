@@ -2,6 +2,7 @@ using bank.victor99dev.Application.Interfaces.Repository;
 using bank.victor99dev.Domain.Entities;
 using bank.victor99dev.Infrastructure.Database.Context;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace bank.victor99dev.Infrastructure.Database.Repositories;
 
@@ -49,7 +50,6 @@ public class AccountRepository : IAccountRepository
     }
     public void Update(Account account)
     {
-        account.SetUpdatedAt();
         AttachAsModified(account);
     }
 
@@ -57,12 +57,36 @@ public class AccountRepository : IAccountRepository
     {
         var local = _dbContext.Set<Account>()
             .Local
-            .FirstOrDefault(e => e.Id == account.Id);
+            .FirstOrDefault(e => e.Id.Equals(account.Id));
 
         if (local is not null && !ReferenceEquals(local, account))
             _dbContext.Entry(local).State = EntityState.Detached;
 
         _dbContext.Attach(account);
-        _dbContext.Entry(account).State = EntityState.Modified;
+
+        var entry = _dbContext.Entry(account);
+        entry.State = EntityState.Modified;
+
+        foreach (var nav in entry.Navigations)
+        {
+            if (!nav.Metadata.TargetEntityType.IsOwned())
+                continue;
+
+            if (nav is ReferenceEntry reference)
+            {
+                if (reference.CurrentValue is null)
+                    continue;
+
+                _dbContext.Entry(reference.CurrentValue).State = EntityState.Modified;
+            }
+            else if (nav is CollectionEntry collection)
+            {
+                if (collection.CurrentValue is null)
+                    continue;
+
+                foreach (var item in collection.CurrentValue)
+                    _dbContext.Entry(item).State = EntityState.Modified;
+            }
+        }
     }
 }
