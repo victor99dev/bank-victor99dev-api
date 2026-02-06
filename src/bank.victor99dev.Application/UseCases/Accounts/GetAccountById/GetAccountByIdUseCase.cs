@@ -1,4 +1,6 @@
+using bank.victor99dev.Application.Interfaces.CacheRepository;
 using bank.victor99dev.Application.Interfaces.Repository;
+using bank.victor99dev.Application.Shared.Cache;
 using bank.victor99dev.Application.Shared.Results;
 using bank.victor99dev.Application.UseCases.Accounts.Shared;
 
@@ -7,13 +9,19 @@ namespace bank.victor99dev.Application.UseCases.Accounts.GetAccountById;
 public class GetAccountByIdUseCase : IGetAccountByIdUseCase
 {
     private readonly IAccountRepository _accountRepository;
-    public GetAccountByIdUseCase(IAccountRepository accountRepository)
+    private readonly IAccountCacheRepository _accountCacheRepository;
+    public GetAccountByIdUseCase(IAccountRepository accountRepository, IAccountCacheRepository accountCacheRepository)
     {
         _accountRepository = accountRepository;
+        _accountCacheRepository = accountCacheRepository;
     }
 
     public async Task<Result<AccountResponse>> ExecuteAsync(Guid accountId, CancellationToken cancellationToken = default)
     {
+        var cached = await _accountCacheRepository.GetByIdAsync(accountId, cancellationToken);
+        if (cached is not null)
+            return Result<AccountResponse>.Ok(data: cached);
+        
         var account = await _accountRepository.GetByIdAsync(accountId, cancellationToken);
         if (account is null)
             return Result.Fail<AccountResponse>($"The account id {accountId} was not found.", ResultStatus.NotFound);
@@ -28,6 +36,8 @@ public class GetAccountByIdUseCase : IGetAccountByIdUseCase
             CreatedAt = account.CreatedAt,
             UpdatedAt = account.UpdatedAt
         };
+
+        await _accountCacheRepository.SetAsync(response, CacheTtl.CacheExpiresAtEndOfDayUtc(), cancellationToken);
 
         return Result<AccountResponse>.Ok(data: response);
     }

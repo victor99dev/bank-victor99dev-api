@@ -7,7 +7,6 @@ public class DeleteAccountUseCase : IDeleteAccountUseCase
 {
     private readonly IAccountRepository _accountRepository;
     private readonly IUnitOfWork _unitOfWork;
-
     public DeleteAccountUseCase(IAccountRepository accountRepository, IUnitOfWork unitOfWork)
     {
         _accountRepository = accountRepository;

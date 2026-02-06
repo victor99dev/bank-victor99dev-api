@@ -11,20 +11,35 @@ namespace bank.victor99dev.Tests.Application.UseCases.Accounts;
 
 public class ActivateAccountUseCaseTests
 {
-    [Fact(DisplayName = "Should activate an inactive account")]
+    [Fact(DisplayName = "Should activate an inactive account and invalidate cache")]
     public async Task ShouldActivateAccount()
     {
         var db = EntityFrameworkInMemoryFactory.NewDbName();
         var (ctx, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
 
-        var created = await new CreateAccountUseCase(repo, uow).ExecuteAsync(AccountRequests.Valid());
+        var request = AccountRequests.Valid(seed: 1);
+        var created = await new CreateAccountUseCase(repo, uow).ExecuteAsync(request);
         var id = created.Data!.Id;
 
-        var deactivate = new DeactivateAccountUseCase(repo, uow);
+        var cacheDeactivate = new FakeAccountCacheRepository();
+
+        var deactivate = new DeactivateAccountUseCase(repo, uow, cacheDeactivate);
         var deactivated = await deactivate.ExecuteAsync(id);
         Assert.True(deactivated.IsSuccess);
 
-        var useCase = new ActivateAccountUseCase(repo, uow);
+        var cache = new FakeAccountCacheRepository();
+        cache.Seed(new()
+        {
+            Id = id,
+            Name = created.Data!.Name,
+            Cpf = request.Cpf,
+            IsActive = false,
+            IsDeleted = false,
+            CreatedAt = created.Data!.CreatedAt,
+            UpdatedAt = DateTime.UtcNow
+        });
+
+        var useCase = new ActivateAccountUseCase(repo, uow, cache);
         var result = await useCase.ExecuteAsync(id);
 
         Assert.True(result.IsSuccess);
@@ -33,6 +48,10 @@ public class ActivateAccountUseCaseTests
         Assert.True(raw.IsActive);
         Assert.False(raw.IsDeleted);
         Assert.NotNull(raw.UpdatedAt);
+
+        Assert.Equal(1, cache.InvalidateCalls);
+        Assert.False(cache.ContainsId(id));
+        Assert.False(cache.ContainsCpf(request.Cpf));
     }
 
     [Fact(DisplayName = "Should return NotFound when account does not exist")]
@@ -41,10 +60,14 @@ public class ActivateAccountUseCaseTests
         var db = EntityFrameworkInMemoryFactory.NewDbName();
         var (_, repo, uow) = EntityFrameworkInMemoryFactory.CreateInfra(db);
 
-        var useCase = new ActivateAccountUseCase(repo, uow);
+        var cache = new FakeAccountCacheRepository();
+        var useCase = new ActivateAccountUseCase(repo, uow, cache);
+
         var result = await useCase.ExecuteAsync(Guid.NewGuid());
 
         Assert.False(result.IsSuccess);
         Assert.Equal(ResultStatus.NotFound, result.Status);
+
+        Assert.Equal(0, cache.InvalidateCalls);
     }
 }
