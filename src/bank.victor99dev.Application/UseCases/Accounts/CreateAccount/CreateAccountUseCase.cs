@@ -15,7 +15,12 @@ public class CreateAccountUseCase : ICreateAccountUseCase
     private readonly IAccountCacheRepository _accountCacheRepository;
     private readonly IAccountEventFactory _accountEventFactory;
     private readonly IDomainEventDispatcher _domainEventDispatcher;
-    public CreateAccountUseCase(IAccountRepository accountRepository, IUnitOfWork unitOfWork, IAccountCacheRepository accountCacheRepository, IAccountEventFactory accountEventFactory, IDomainEventDispatcher domainEventDispatcher)
+    public CreateAccountUseCase(
+        IAccountRepository accountRepository,
+        IUnitOfWork unitOfWork,
+        IAccountCacheRepository accountCacheRepository,
+        IAccountEventFactory accountEventFactory,
+        IDomainEventDispatcher domainEventDispatcher)
     {
         _accountRepository = accountRepository;
         _unitOfWork = unitOfWork;

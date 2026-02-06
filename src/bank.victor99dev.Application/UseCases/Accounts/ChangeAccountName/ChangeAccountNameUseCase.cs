@@ -1,4 +1,5 @@
 using bank.victor99dev.Application.Interfaces.CacheRepository;
+using bank.victor99dev.Application.Interfaces.Messaging;
 using bank.victor99dev.Application.Interfaces.Repository;
 using bank.victor99dev.Application.Shared.Cache;
 using bank.victor99dev.Application.Shared.Results;
@@ -11,14 +12,20 @@ public class ChangeAccountNameUseCase : IChangeAccountNameUseCase
     private readonly IAccountRepository _accountRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IAccountCacheRepository _accountCacheRepository;
+    private readonly IDomainEventDispatcher _domainEventDispatcher;
+    private readonly IAccountEventFactory _accountEventFactory;
     public ChangeAccountNameUseCase(
         IAccountRepository accountRepository,
         IUnitOfWork unitOfWork,
-        IAccountCacheRepository accountCacheRepository)
+        IAccountCacheRepository accountCacheRepository,
+        IDomainEventDispatcher domainEventDispatcher,
+        IAccountEventFactory accountEventFactory)
     {
         _accountRepository = accountRepository;
         _unitOfWork = unitOfWork;
         _accountCacheRepository = accountCacheRepository;
+        _domainEventDispatcher = domainEventDispatcher;
+        _accountEventFactory = accountEventFactory;
     }
 
     public async Task<Result<AccountResponse>> ExecuteAsync(Guid accountId, ChangeAccountNameRequest request, CancellationToken cancellationToken = default)
@@ -28,10 +35,18 @@ public class ChangeAccountNameUseCase : IChangeAccountNameUseCase
             return Result.Fail<AccountResponse>($"The account id {accountId} was not found.", ResultStatus.NotFound);
 
         var oldCpf = account.Cpf.Value;
+        var oldName = account.AccountName.Value;
 
         account.ChangeName(request.Name);
 
         _accountRepository.Update(account);
+
+        await _domainEventDispatcher.EnqueueAsync([
+                _accountEventFactory.NameChanged(account, oldName),
+                _accountEventFactory.Updated(account)],
+            cancellationToken: cancellationToken
+        );
+
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
         await AccountCacheInvalidation.InvalidateWithOldCpfAsync(_accountCacheRepository, account, oldCpf, cancellationToken);

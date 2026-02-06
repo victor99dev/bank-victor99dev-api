@@ -13,7 +13,12 @@ public class RestoreAccountUseCase : IRestoreAccountUseCase
     private readonly IAccountCacheRepository _accountCacheRepository;
     private readonly IDomainEventDispatcher _domainEventDispatcher;
     private readonly IAccountEventFactory _accountEventFactory;
-    public RestoreAccountUseCase(IAccountRepository accountRepository, IUnitOfWork unitOfWork, IAccountCacheRepository accountCacheRepository, IDomainEventDispatcher domainEventDispatcher, IAccountEventFactory accountEventFactory)
+    public RestoreAccountUseCase(
+        IAccountRepository accountRepository,
+        IUnitOfWork unitOfWork,
+        IAccountCacheRepository accountCacheRepository,
+        IDomainEventDispatcher domainEventDispatcher,
+        IAccountEventFactory accountEventFactory)
     {
         _accountRepository = accountRepository;
         _unitOfWork = unitOfWork;

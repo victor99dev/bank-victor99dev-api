@@ -3,7 +3,6 @@ using bank.victor99dev.Application.Interfaces.Messaging;
 using bank.victor99dev.Application.Interfaces.Repository;
 using bank.victor99dev.Application.Shared.Cache;
 using bank.victor99dev.Application.Shared.Results;
-using bank.victor99dev.Domain.Events;
 
 namespace bank.victor99dev.Application.UseCases.Accounts.ActivateAccount;
 
@@ -14,7 +13,12 @@ public class ActivateAccountUseCase : IActivateAccountUseCase
     private readonly IAccountCacheRepository _accountCacheRepository;
     private readonly IDomainEventDispatcher _domainEventDispatcher;
     private readonly IAccountEventFactory _accountEventFactory;
-    public ActivateAccountUseCase(IAccountRepository accountRepository, IUnitOfWork unitOfWork, IAccountCacheRepository accountCacheRepository, IDomainEventDispatcher domainEventDispatcher, IAccountEventFactory accountEventFactory)
+    public ActivateAccountUseCase(
+        IAccountRepository accountRepository, 
+        IUnitOfWork unitOfWork, 
+        IAccountCacheRepository accountCacheRepository, 
+        IDomainEventDispatcher domainEventDispatcher, 
+        IAccountEventFactory accountEventFactory)
     {
         _accountRepository = accountRepository;
         _unitOfWork = unitOfWork;

@@ -17,8 +17,9 @@ public class GetAccountsPagedUseCase : IGetAccountsPagedUseCase
     {
         var (Items, TotalCount) = await _accountRepository.GetPagedAsync(request.Page, request.PageSize, cancellationToken);
 
-        var response = new PageResult<AccountResponse>{
-        Items = Items
+        var response = new PageResult<AccountResponse>
+        {
+            Items = Items
                 .Select(a => new AccountResponse
                 {
                     Id = a.Id,

@@ -13,11 +13,18 @@ public class DeleteAccountUseCase : IDeleteAccountUseCase
     private readonly IDomainEventDispatcher _domainEventDispatcher;
     private readonly IAccountEventFactory _accountEventFactory;
     private readonly IAccountCacheRepository _accountCacheRepository;
-    public DeleteAccountUseCase(IAccountRepository accountRepository, IUnitOfWork unitOfWork, IAccountCacheRepository accountCacheRepository)
+    public DeleteAccountUseCase(
+        IAccountRepository accountRepository,
+        IUnitOfWork unitOfWork,
+        IAccountCacheRepository accountCacheRepository,
+        IDomainEventDispatcher domainEventDispatcher,
+        IAccountEventFactory accountEventFactory)
     {
         _accountRepository = accountRepository;
         _unitOfWork = unitOfWork;
         _accountCacheRepository = accountCacheRepository;
+        _domainEventDispatcher = domainEventDispatcher;
+        _accountEventFactory = accountEventFactory;
     }
 
     public async Task<Result> ExecuteAsync(Guid accountId, CancellationToken cancellationToken = default)
@@ -30,7 +37,11 @@ public class DeleteAccountUseCase : IDeleteAccountUseCase
 
         _accountRepository.Update(account);
 
-        await _domainEventDispatcher.EnqueueAsync([_accountEventFactory.Deleted(account)], cancellationToken: cancellationToken);
+        await _domainEventDispatcher.EnqueueAsync([
+                _accountEventFactory.Deleted(account),
+                _accountEventFactory.Updated(account)
+           ], cancellationToken: cancellationToken
+        );
 
         await _unitOfWork.SaveChangesAsync(cancellationToken);
 
