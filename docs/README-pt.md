@@ -47,12 +47,13 @@ Todas essas áreas podem **reagir aos eventos publicados por este serviço**, se
 
 ## Tecnologias
 
-- **.NET 8**
-- **Entity Framework Core 8**
-- **PostgreSQL (Npgsql)**
-- **Confluent.Kafka**
-- **Redis (StackExchange.Redis)**
-- **Swagger / OpenAPI**
+* **.NET 8**
+* **Entity Framework Core 8**
+* **PostgreSQL (Npgsql)**
+* **Confluent.Kafka**
+* **Redis (StackExchange.Redis)**
+* **Swagger / OpenAPI**
+* **xUnit**
 
 ---
 
