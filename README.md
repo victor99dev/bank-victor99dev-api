@@ -54,6 +54,7 @@ All these areas can **react to the events published by this service**, without d
 * **Confluent.Kafka**
 * **Redis (StackExchange.Redis)**
 * **Swagger / OpenAPI**
+* **xUnit**
 
 ---
 
